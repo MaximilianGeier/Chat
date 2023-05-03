@@ -20,11 +20,7 @@ public class ChatController : Controller
     [HttpGet("{id:int}")]
     public IActionResult Get([FromRoute] int id)
     {
-<<<<<<< Updated upstream
-        var chatroom = _context.Chatroom
-=======
         var chatroom = _context.Chatrooms
->>>>>>> Stashed changes
             .Include(x => x.Users)
             .FirstOrDefault(x => x.Id == id);
 
@@ -36,19 +32,6 @@ public class ChatController : Controller
         var dto = new ChatroomDto
         {
             Id = chatroom.Id,
-<<<<<<< Updated upstream
-/*                Users = chatroom.Users.Select(x => new UserDto
-                {
-                    Id = 1,
-                    Name = "1"
-                })*/
-=======
-/*				Users = chatroom.Users.Select(x => new UserDto
-				{
-					Id = 1,
-					Name = "1"
-				})*/
->>>>>>> Stashed changes
         };
 
         return Ok(dto);
@@ -77,11 +60,7 @@ public class ChatController : Controller
     [HttpPatch("{id:int}")]
     public IActionResult Update([FromBody] CreateChatroom request, [FromRoute] int id)
     {
-<<<<<<< Updated upstream
-        var chatroom = _context.Chatroom.FirstOrDefault(x => x.Id == id);
-=======
         var chatroom = _context.Chatrooms.FirstOrDefault(x => x.Id == id);
->>>>>>> Stashed changes
 
         if (chatroom is null)
         {
@@ -98,7 +77,7 @@ public class ChatController : Controller
     [Route("/users"), HttpGet("{id:int}")]
     public IActionResult GetUsers([FromRoute] int id)
     {
-        var users = _context.Chatroom
+        var users = _context.Chatrooms
             .Include(x => x.Users)
             .Where(x => x.Id == id);
 

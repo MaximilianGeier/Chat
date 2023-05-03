@@ -2,5 +2,5 @@
 
 public class UpdateMessage
 {
-    public string NewText { get; set; }
+    public string Text { get; set; }
 }

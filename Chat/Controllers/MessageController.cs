@@ -42,7 +42,8 @@ public class MessageController : Controller
             Text = request.Text,
             User = user,
             Chatroom = chat,
-            CreationDate = DateTime.Now
+            CreationDate = DateTime.Now,
+            UpdateTime = DateTime.Now
         };
         _context.Add(message);
         _context.SaveChanges();
@@ -57,7 +58,7 @@ public class MessageController : Controller
         if (message is null)
             return NotFound();
 
-        message.Text = request.NewText;
+        message.Text = request.Text;
 
         _context.SaveChanges();
         

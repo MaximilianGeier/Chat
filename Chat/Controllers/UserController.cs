@@ -16,6 +16,16 @@ public class UserController : Controller
     {
         _context = context;
     }
+    
+    [HttpGet("{id:int}")]
+    public IActionResult Get([FromRoute] int id)
+    {
+        var user = _context.Users.FirstOrDefault(x => x.Id == id);
+        if (user is null)
+            return NotFound();
+
+        return Ok(new UserDto(user));
+    }
 
     [HttpPost]
     public IActionResult Create([FromBody] CreateUser request)
@@ -23,9 +33,7 @@ public class UserController : Controller
         IQueryable<User> same = _context.Users.Where(x => x.Login == request.Login);
 
         if (same.Count() != 0)
-        {
             return Conflict();
-        }
 
         var user = new User
         {
@@ -36,6 +44,20 @@ public class UserController : Controller
 
         _context.SaveChanges();
 
+        return Ok();
+    }
+    
+    [HttpPatch("{id:int}")]
+    public IActionResult Update([FromBody] UpdateUser request, [FromRoute] int id)
+    {
+        var user = _context.Users.FirstOrDefault(x => x.Id == id);
+        if (user is null)
+            return NotFound();
+
+        user.Name = request.Name;
+
+        _context.SaveChanges();
+        
         return Ok();
     }
 }
