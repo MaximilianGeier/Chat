@@ -1,8 +1,7 @@
-namespace Chat.Dtos;
+﻿namespace Chat.Requests;
 
-public class UserDto
+public class CreateUser
 {
-    public int Id { get; set; }
     public string Name { get; set; }
     public string Login { get; set; }
 }

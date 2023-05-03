@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<ChatContext>(x => x.UseSqlite("Data Source=app-data.db"));
+builder.Services.AddDbContext<ChatContext>(x => x.UseMySQL("server=localhost;database=chat_db;user=root;password="));
 
 var app = builder.Build();
 
