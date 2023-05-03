@@ -18,12 +18,12 @@ public class ChatController : Controller
     }
 
     [HttpGet("{id:int}")]
-    public IActionResult Get([FromRoute] int id)
+    public async Task<IActionResult> GetAsync([FromRoute] int id)
     {
-        var chatroom = _context.Chatrooms
+        var chatroom = await _context.Chatrooms
             .Include(x => x.Users.Where(y => !y.IsDeleted))
             .Include(x => x.Messages.Where(y => !y.IsDeleted))
-            .FirstOrDefault(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id);
         if (chatroom is null)
             return NotFound();
         if (chatroom.IsDeleted)
@@ -35,12 +35,12 @@ public class ChatController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] CreateChatroom request)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateChatroom request)
     {
         if (!_context.Users.All(x => request.Users.Contains(x.Id)))
             return NotFound();
 
-        var users = _context.Users.Where(x => request.Users.Contains(x.Id)).ToList();
+        var users = await _context.Users.Where(x => request.Users.Contains(x.Id)).ToListAsync();
         if (users.Count == 0)
             return NotFound();
         
@@ -51,49 +51,85 @@ public class ChatController : Controller
         };
         
         _context.Add(chatroom);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }
 
     [HttpPatch("{id:int}")]
-    public IActionResult Update([FromBody] CreateChatroom request, [FromRoute] int id)
+    public async Task<IActionResult> UpdateAsync([FromBody] CreateChatroom request, [FromRoute] int id)
     {
-        var chatroom = _context.Chatrooms.FirstOrDefault(x => x.Id == id);
+        var chatroom = await _context.Chatrooms.FirstOrDefaultAsync(x => x.Id == id);
         if (chatroom is null)
             return NotFound();
 
         chatroom.Title = request.Title;
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }
     
     [HttpDelete("{id:int}")]
-    public IActionResult Delete([FromBody] UpdateMessage request, [FromRoute] int id)
+    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
-        var chatroom = _context.Chatrooms.FirstOrDefault(x => x.Id == id);
+        var chatroom = await _context.Chatrooms.FirstOrDefaultAsync(x => x.Id == id);
         if (chatroom is null)
             return NotFound();
 
         chatroom.IsDeleted = true;
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }
     
     [HttpGet("{id:int}/users")]
-    public IActionResult GetUsers([FromRoute] int id)
+    public async Task<IActionResult> GetUsersAsync([FromRoute] int id)
     {
-        var users = _context.Users
-            .Where(user => user.Chatrooms.Any(item => item.Id == id) && !user.IsDeleted).ToList();
+        var users = await _context.Users
+            .Where(user => user.Chatrooms.Any(item => item.Id == id) && !user.IsDeleted).ToListAsync();
         if (users.Count == 0)
             return NotFound();
 
         var usersDto = new UserDto[users.Count()];
 
         return Ok(users);
+    }
+
+    [HttpPatch("user")]
+    public async Task<IActionResult> AddUserAsync([FromBody] AddUser request)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(user => user.Id == request.UserId && !user.IsDeleted);
+        
+        var chatroom = await _context.Chatrooms
+            .FirstOrDefaultAsync(item => item.Id == request.ChatroomId && !item.IsDeleted);
+        
+        if (user is null || chatroom is null || chatroom.Users.Contains(user))
+            return Conflict();
+        
+        chatroom.Users.Add(user);
+        
+        _context.Update(chatroom);
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+    
+    [HttpGet("messages/{id:int}")]
+    public async Task<IActionResult> GetMessagesAsync([FromRoute] int id)
+    {
+        var chatroom = _context.Chatrooms.FirstOrDefault(chatroom => chatroom.Id == id);
+        if (chatroom is null)
+            return NotFound();
+        if (chatroom is { IsDeleted: true })
+            return NotFound();
+        
+        var messages = await  _context.ChatMessages
+            .Include(x => x.User)
+            .Where(message => message.Chatroom.Id == id && !message.IsDeleted).ToListAsync();
+
+        return Ok(messages.Select(x => new ChatMessageDto(x)));
     }
 }

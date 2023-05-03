@@ -18,9 +18,9 @@ public class UserController : Controller
     }
     
     [HttpGet("{id:int}")]
-    public IActionResult Get([FromRoute] int id)
+    public async Task<IActionResult> GetAsync([FromRoute] int id)
     {
-        var user = _context.Users.FirstOrDefault(x => x.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
         if (user is null)
             return NotFound();
         if (user.IsDeleted)
@@ -30,9 +30,11 @@ public class UserController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] CreateUser request)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateUser request)
     {
-        IQueryable<User> same = _context.Users.Where(x => x.Login == request.Login);
+        var same = await _context.Users
+            .Where(x => x.Login == request.Login)
+            .ToArrayAsync();
 
         if (same.Count() != 0)
             return Conflict();
@@ -44,35 +46,35 @@ public class UserController : Controller
         };
         _context.Users.Add(user);
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }
     
     [HttpPatch("{id:int}")]
-    public IActionResult Update([FromBody] UpdateUser request, [FromRoute] int id)
+    public async Task<IActionResult> UpdateAsync([FromBody] UpdateUser request, [FromRoute] int id)
     {
-        var user = _context.Users.FirstOrDefault(x => x.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
         if (user is null)
             return NotFound();
 
         user.Name = request.Name;
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         
         return Ok();
     }
     
     [HttpDelete("{id:int}")]
-    public IActionResult Delete([FromBody] UpdateMessage request, [FromRoute] int id)
+    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
-        var user = _context.Users.FirstOrDefault(x => x.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
         if (user is null)
             return NotFound();
 
         user.IsDeleted = true;
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }

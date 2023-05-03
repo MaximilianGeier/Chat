@@ -18,11 +18,11 @@ public class MessageController : Controller
     }
     
     [HttpGet("{id:int}")]
-    public IActionResult Get([FromRoute] int id)
+    public async Task<IActionResult> GetAsync([FromRoute] int id)
     {
-        var message = _context.ChatMessages
+        var message = await _context.ChatMessages
             .Include(x => x.User)
-            .FirstOrDefault(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id);
         if (message is null)
             return NotFound();
         if (message.IsDeleted)
@@ -32,12 +32,12 @@ public class MessageController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] CreateMessage request)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateMessage request)
     {
-        var user = _context.Users.FirstOrDefault(x => request.UserId == x.Id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => request.UserId == x.Id);
         if (user is null)
             return NotFound();
-        var chat = _context.Chatrooms.FirstOrDefault(x => request.ChatId == x.Id);
+        var chat = await _context.Chatrooms.FirstOrDefaultAsync(x => request.ChatId == x.Id);
         if (chat is null)
             return NotFound();
         
@@ -50,15 +50,15 @@ public class MessageController : Controller
             UpdateTime = DateTime.Now
         };
         _context.Add(message);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }
 
     [HttpPatch("{id:int}")]
-    public IActionResult Update([FromBody] UpdateMessage request, [FromRoute] int id)
+    public async Task<IActionResult> UpdateAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
-        var message = _context.ChatMessages.FirstOrDefault(x => x.Id == id);
+        var message = await _context.ChatMessages.FirstOrDefaultAsync(x => x.Id == id);
         if (message is null)
             return NotFound();
 
@@ -66,21 +66,21 @@ public class MessageController : Controller
         message.IsUpdated = true;
         message.UpdateTime = DateTime.Now;
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         
         return Ok();
     }
 
     [HttpDelete("{id:int}")]
-    public IActionResult Delete([FromBody] UpdateMessage request, [FromRoute] int id)
+    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
-        var message = _context.ChatMessages.FirstOrDefault(x => x.Id == id);
+        var message = await _context.ChatMessages.FirstOrDefaultAsync(x => x.Id == id);
         if (message is null)
             return NotFound();
 
         message.IsDeleted = true;
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return Ok();
     }
