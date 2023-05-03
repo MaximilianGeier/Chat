@@ -1,12 +1,14 @@
+using Chat;
 using Chat.Database;
 using Microsoft.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<ChatContext>(x => x.UseMySQL("server=localhost;database=chat_db;user=root;password=root"));
+builder.Services.AddDbContext<ChatContext>(x => x.UseMySQL(MySqlConnectionDataHolder.ConnectionData));
 
 var app = builder.Build();
 

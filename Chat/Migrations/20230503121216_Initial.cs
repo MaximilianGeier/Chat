@@ -21,7 +21,8 @@ namespace Chat.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    Title = table.Column<string>(type: "longtext", nullable: true)
+                    Title = table.Column<string>(type: "longtext", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -35,8 +36,9 @@ namespace Chat.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "longtext", nullable: true),
-                    Login = table.Column<string>(type: "longtext", nullable: true)
+                    Name = table.Column<string>(type: "longtext", nullable: false),
+                    Login = table.Column<string>(type: "longtext", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,15 +82,15 @@ namespace Chat.Migrations
                 name: "ChatroomUser",
                 columns: table => new
                 {
-                    ChatsId = table.Column<int>(type: "int", nullable: false),
+                    ChatroomsId = table.Column<int>(type: "int", nullable: false),
                     UsersId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChatroomUser", x => new { x.ChatsId, x.UsersId });
+                    table.PrimaryKey("PK_ChatroomUser", x => new { x.ChatroomsId, x.UsersId });
                     table.ForeignKey(
-                        name: "FK_ChatroomUser_Chatrooms_ChatsId",
-                        column: x => x.ChatsId,
+                        name: "FK_ChatroomUser_Chatrooms_ChatroomsId",
+                        column: x => x.ChatroomsId,
                         principalTable: "Chatrooms",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);

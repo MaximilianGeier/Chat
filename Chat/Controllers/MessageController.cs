@@ -20,8 +20,12 @@ public class MessageController : Controller
     [HttpGet("{id:int}")]
     public IActionResult Get([FromRoute] int id)
     {
-        var message = _context.ChatMessages.FirstOrDefault(x => x.Id == id);
+        var message = _context.ChatMessages
+            .Include(x => x.User)
+            .FirstOrDefault(x => x.Id == id);
         if (message is null)
+            return NotFound();
+        if (message.IsDeleted)
             return NotFound();
 
         return Ok(new ChatMessageDto(message));
@@ -59,9 +63,25 @@ public class MessageController : Controller
             return NotFound();
 
         message.Text = request.Text;
+        message.IsUpdated = true;
+        message.UpdateTime = DateTime.Now;
 
         _context.SaveChanges();
         
+        return Ok();
+    }
+
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete([FromBody] UpdateMessage request, [FromRoute] int id)
+    {
+        var message = _context.ChatMessages.FirstOrDefault(x => x.Id == id);
+        if (message is null)
+            return NotFound();
+
+        message.IsDeleted = true;
+
+        _context.SaveChanges();
+
         return Ok();
     }
 }

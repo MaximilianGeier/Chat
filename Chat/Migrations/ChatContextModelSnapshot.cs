@@ -62,7 +62,11 @@ namespace Chat.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -76,10 +80,15 @@ namespace Chat.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Login")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -89,13 +98,13 @@ namespace Chat.Migrations
 
             modelBuilder.Entity("ChatroomUser", b =>
                 {
-                    b.Property<int>("ChatsId")
+                    b.Property<int>("ChatroomsId")
                         .HasColumnType("int");
 
                     b.Property<int>("UsersId")
                         .HasColumnType("int");
 
-                    b.HasKey("ChatsId", "UsersId");
+                    b.HasKey("ChatroomsId", "UsersId");
 
                     b.HasIndex("UsersId");
 
@@ -125,7 +134,7 @@ namespace Chat.Migrations
                 {
                     b.HasOne("Chat.Models.Chatroom", null)
                         .WithMany()
-                        .HasForeignKey("ChatsId")
+                        .HasForeignKey("ChatroomsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

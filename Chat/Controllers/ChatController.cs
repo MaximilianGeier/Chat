@@ -21,18 +21,15 @@ public class ChatController : Controller
     public IActionResult Get([FromRoute] int id)
     {
         var chatroom = _context.Chatrooms
-            .Include(x => x.Users)
+            .Include(x => x.Users.Where(y => !y.IsDeleted))
+            .Include(x => x.Messages.Where(y => !y.IsDeleted))
             .FirstOrDefault(x => x.Id == id);
-
         if (chatroom is null)
-        {
             return NotFound();
-        }
+        if (chatroom.IsDeleted)
+            return NotFound();
 
-        var dto = new ChatroomDto
-        {
-            Id = chatroom.Id,
-        };
+        var dto = new ChatroomDto(chatroom);
 
         return Ok(dto);
     }
@@ -40,18 +37,20 @@ public class ChatController : Controller
     [HttpPost]
     public IActionResult Create([FromBody] CreateChatroom request)
     {
-        bool all = _context.Users.All(x => request.Users.Contains(x.Id));
-
-        if (!all)
-        {
+        if (!_context.Users.All(x => request.Users.Contains(x.Id)))
             return NotFound();
-        }
+
+        var users = _context.Users.Where(x => request.Users.Contains(x.Id)).ToList();
+        if (users.Count == 0)
+            return NotFound();
+        
         var chatroom = new Chatroom
         {
-            Title = request.Title
+            Title = request.Title,
+            Users = users
         };
+        
         _context.Add(chatroom);
-
         _context.SaveChanges();
 
         return Ok();
@@ -61,11 +60,8 @@ public class ChatController : Controller
     public IActionResult Update([FromBody] CreateChatroom request, [FromRoute] int id)
     {
         var chatroom = _context.Chatrooms.FirstOrDefault(x => x.Id == id);
-
         if (chatroom is null)
-        {
             return NotFound();
-        }
 
         chatroom.Title = request.Title;
 
@@ -74,28 +70,30 @@ public class ChatController : Controller
         return Ok();
     }
     
-    [Route("/users"), HttpGet("{id:int}")]
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete([FromBody] UpdateMessage request, [FromRoute] int id)
+    {
+        var chatroom = _context.Chatrooms.FirstOrDefault(x => x.Id == id);
+        if (chatroom is null)
+            return NotFound();
+
+        chatroom.IsDeleted = true;
+
+        _context.SaveChanges();
+
+        return Ok();
+    }
+    
+    [HttpGet("{id:int}/users")]
     public IActionResult GetUsers([FromRoute] int id)
     {
-        var users = _context.Chatrooms
-            .Include(x => x.Users)
-            .Where(x => x.Id == id);
-
-        if (chatroom is null)
-        {
+        var users = _context.Users
+            .Where(user => user.Chatrooms.Any(item => item.Id == id) && !user.IsDeleted).ToList();
+        if (users.Count == 0)
             return NotFound();
-        }
 
-        var dto = new ChatroomDto
-        {
-            Id = chatroom.Id,
-/*                Users = chatroom.Users.Select(x => new UserDto
-                {
-                    Id = 1,
-                    Name = "1"
-                })*/
-        };
+        var usersDto = new UserDto[users.Count()];
 
-        return Ok(dto);
+        return Ok(users);
     }
 }

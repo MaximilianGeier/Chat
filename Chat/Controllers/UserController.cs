@@ -23,6 +23,8 @@ public class UserController : Controller
         var user = _context.Users.FirstOrDefault(x => x.Id == id);
         if (user is null)
             return NotFound();
+        if (user.IsDeleted)
+            return NotFound();
 
         return Ok(new UserDto(user));
     }
@@ -58,6 +60,20 @@ public class UserController : Controller
 
         _context.SaveChanges();
         
+        return Ok();
+    }
+    
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete([FromBody] UpdateMessage request, [FromRoute] int id)
+    {
+        var user = _context.Users.FirstOrDefault(x => x.Id == id);
+        if (user is null)
+            return NotFound();
+
+        user.IsDeleted = true;
+
+        _context.SaveChanges();
+
         return Ok();
     }
 }

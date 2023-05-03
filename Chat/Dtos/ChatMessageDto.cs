@@ -8,6 +8,7 @@ public class ChatMessageDto
     public string Text { get; set; }
     public string UserName { get; set; }
     public DateTime Date { get; set; }
+    public bool IsUpdated { get; set; }
 
     public ChatMessageDto(ChatMessage chatMessage)
     {
@@ -15,5 +16,6 @@ public class ChatMessageDto
         Text = chatMessage.Text;
         UserName = chatMessage.User.Name;
         Date = chatMessage.CreationDate;
+        IsUpdated = chatMessage.IsUpdated;
     }
 }

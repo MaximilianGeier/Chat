@@ -14,7 +14,7 @@ public class ChatMessage
     public Chatroom Chatroom { get; set; }
     [Required]
     public DateTime CreationDate { get; set; }
-    [Required]
+    [Required] //[DefaultValue(DefaultValueSql: "GetDate()")]
     public DateTime UpdateTime { get; set; }
     [DefaultValue(false)]
     public bool IsDeleted { get; set; }
