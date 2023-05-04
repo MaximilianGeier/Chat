@@ -1,0 +1,52 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject IHttpClientFactory ClientFactory
+@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+
+<!DOCTYPE html>
+<html lang="en" data-pgc-set-master>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>Blank Template for Bootstrap</title>
+        <!-- Bootstrap core CSS -->
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Custom styles for this template -->
+        <link href="shopping_cart.css" rel="stylesheet">
+    </head>
+    <body>
+        <div>
+</div>
+        <header class="page-borders navbar navbar-expand-lg navbar-light py-4" data-pgc-save-partial="main_header" data-pgc-save-partial-operation="load">
+        </header>
+    <main class="container d-flex flex-column gap-4 main mb-5 mt-5">
+        <form action="/user" method="post">
+            <label for="name"></label>
+            <input id="name" type="text" placeholder="Имя" name="Name">
+            <label for="login"></label>
+            <input id="login" type="text" placeholder="Логин" name="Login">
+            <button type="submit"></button>
+        </form>
+
+        
+        @Body
+
+    </main>
+        <footer class="page-borders pt-5 text-white" data-pgc="main.footer">
+        </footer>
+        <!-- Bootstrap core JavaScript
+    ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+    </body>
+
+</html>
