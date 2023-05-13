@@ -4,41 +4,30 @@
 
 @inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Web
 @inject IHttpClientFactory ClientFactory
-@using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Web
-@using System.Net.Http
 @using System.Text
 @using System.Text.Json
 @using Chat.Dtos
-@using Chat.Models
 @using Chat.Requests
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.AspNetCore.Components.Routing
-@using Microsoft.AspNetCore.Components.Web
-@using Microsoft.JSInterop
 
 <header class="page-borders navbar navbar-expand-lg navbar-light py-4" data-pgc-save-partial="main_header" data-pgc-save-partial-operation="load"></header>
 <main class="container d-flex flex-column gap-4 main mb-5 mt-5">
-<div>
+<div class="form__container">
     <h2>Добавление пользователя</h2>
     <label for="name">Имя</label>
     <input @bind-value="@newUser.Name" id="name" type="text" placeholder="Имя" name="Name">
     <label for="login">Логин</label>
     <input @bind-value="@newUser.Login" id="login" type="text" placeholder="Логин" name="Login">
-    <button @onclick="AddSubmit">Click</button>
-    <p>User message: @newMessage</p>
+    <button @onclick="AddSubmit" class="standard-btn">Добавить</button>
+    <p><span class="message">User message:</span> @newMessage</p>
 </div>
 
-    <div>
+    <div class="form__container">
         <h2>Получение пользователя</h2>
         <label for="name">id пользователя</label>
         <input @bind-value="@getUserId" id="name"  type="number" placeholder="id" name="Name">
-        <button @onclick="GetSubmit">Click</button>
-        <p>User message: @getUserMessage</p>
+        <button @onclick="GetSubmit" class="standard-btn">Получить имя</button>
+        <p><span class="message">User message:</span> @getUserMessage</p>
     </div>
 
 
@@ -52,19 +41,13 @@
 
     async Task AddSubmit()
     {
+        newMessage = "Отправка данных";
         HttpClient httpClient = ClientFactory.CreateClient();
         var serializeUser = JsonSerializer.Serialize(newUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync("http://localhost:5174/user", requestContent);
         newMessage = await response.Content.ReadAsStringAsync();
-        if (response.IsSuccessStatusCode)
-        {
-            newMessage = "Юзер добавлен";
-        }
-        else
-        {
-            newMessage = "Удивительно, похоже ты допустил ошибку или ввел существующий логин. Невероятная удача!!!";
-        }
+        newMessage = response.IsSuccessStatusCode ? "Юзер добавлен" : "Удивительно, похоже ты допустил ошибку или ввел существующий логин. Невероятная удача!!!";
     }
 
 }
@@ -77,6 +60,12 @@ UserDto userDto;
 
     async Task GetSubmit()
     {
+        if (getUserId == "")
+        {
+            getUserMessage = "Мы юзерфрендли";
+            return;
+        }
+        getUserMessage = "Получение данных";
         HttpClient httpClient = ClientFactory.CreateClient();
         var serializeUser = JsonSerializer.Serialize(newUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
