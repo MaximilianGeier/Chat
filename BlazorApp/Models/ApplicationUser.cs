@@ -1,12 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace Chat.Models;
 
-public class User
+public class ApplicationUser : IdentityUser
 {
-    public int Id { get; set; }
-    [Required]
-    public string Name { get; set; }
     [Required]
     public string Login { get; set; }
     public ICollection<Chatroom> Chatrooms { get; set; } = new List<Chatroom>();

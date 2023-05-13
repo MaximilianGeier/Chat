@@ -1,4 +1,4 @@
-﻿@page "/auth"
+﻿@page "/login"
 
 @inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components
@@ -14,31 +14,30 @@
     <div className="container">
         <h1>Chack chat</h1>
 
-        <EditForm className="form" OnSubmit="@SendLogin">
-            <input @bind-value="@username" type="text" placeholder="Username"/>
-            <input @bind-value="@password" type="password" placeholder="Password"/>
-            <button type="submit" id="login-button">Вход</button>
-        </EditForm>
+        <div className="form" >
+            <input @bind-value="@authUser.UserName" type="text" placeholder="Username"/>
+            <input @bind-value="@authUser.Password" type="password" placeholder="Password"/>
+            <button id="login-button" @onclick="SendLogin" >Вход</button>
+        </div>
         <p>@message</p>
     </div>
 </div>
 
 
 @code {
-    //Auth authUser = new();
-    string? username;
-    string? password;
+    LoginRequest authUser = new();
     string message = "";
 
     async Task SendLogin()
     {
+        authUser.Email = "AAAA";
         message = "Выполняется проверка...";
         HttpClient httpClient = ClientFactory.CreateClient();
         var serializeUser = JsonSerializer.Serialize(authUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("http://localhost:5174/auth", requestContent);
+        var response = await httpClient.PostAsync("http://localhost:5174/auth/login", requestContent);
         message = await response.Content.ReadAsStringAsync();
-        message = response.IsSuccessStatusCode ? "" : "неверные данные";
+        message = response.IsSuccessStatusCode ? "" : await response.Content.ReadAsStringAsync();
     // redirect
     }
 

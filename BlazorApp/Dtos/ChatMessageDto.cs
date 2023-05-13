@@ -14,7 +14,7 @@ public class ChatMessageDto
     {
         Id = chatMessage.Id;
         Text = chatMessage.Text;
-        UserName = chatMessage.User.Name;
+        UserName = chatMessage.ApplicationUser.UserName;
         Date = chatMessage.CreationDate;
         IsUpdated = chatMessage.IsUpdated;
     }

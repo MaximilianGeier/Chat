@@ -2,6 +2,6 @@
 
 public class AddUser
 {
-    public int UserId { get; set; }
+    public string UserName { get; set; }
     public int ChatroomId { get; set; }
 }

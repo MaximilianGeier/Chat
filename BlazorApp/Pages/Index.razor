@@ -47,9 +47,8 @@
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync("http://localhost:5174/user", requestContent);
         newMessage = await response.Content.ReadAsStringAsync();
-        newMessage = response.IsSuccessStatusCode ? "Юзер добавлен" : "Удивительно, похоже ты допустил ошибку или ввел существующий логин. Невероятная удача!!!";
+        newMessage = response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync() : "Удивительно, похоже ты допустил ошибку или ввел существующий логин. Невероятная удача!!!";
     }
-
 }
 
 @* получение пользоватя *@

@@ -9,7 +9,7 @@ public class ChatMessage
     [Required]
     public string Text { get; set; }
     [Required]
-    public User User { get; set; }
+    public ApplicationUser ApplicationUser { get; set; }
     [Required]
     public Chatroom Chatroom { get; set; }
     [Required]

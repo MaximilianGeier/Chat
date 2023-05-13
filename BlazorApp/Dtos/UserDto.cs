@@ -8,10 +8,9 @@ public class UserDto
     public int Id { get; set; }
     public string Name { get; set; }
 
-    public UserDto(User user)
+    public UserDto(ApplicationUser applicationUser)
     {
-        Id = user.Id;
-        Name = user.Name;
+        Name = applicationUser.UserName;
     }
     public UserDto()
     {

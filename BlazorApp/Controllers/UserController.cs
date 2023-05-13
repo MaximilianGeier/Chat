@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Chat.Controllers;
 
-[Route("/user")]
+/*[Route("/user")]
 [ApiController]
 public class UserController : Controller
 {
@@ -49,7 +49,7 @@ public class UserController : Controller
 
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(User.Identity.IsAuthenticated.ToString());
     }
     
     [HttpPatch("{id:int}")]
@@ -79,4 +79,4 @@ public class UserController : Controller
 
         return Ok();
     }
-}
+}*/

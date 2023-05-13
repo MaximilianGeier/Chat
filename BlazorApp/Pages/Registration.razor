@@ -14,31 +14,31 @@
     <div className="container">
         <h1>Chack chat</h1>
 
-        <EditForm className="form" OnSubmit="@Authenticate">
-            <input @bind-value="@username" type="text" placeholder="Username"/>
-            <input @bind-value="@password" type="password" placeholder="Password"/>
-            <button type="submit" id="login-button">Регистрация</button>
-        </EditForm>
+        <div className="form">
+            <input @bind-value="@authUser.UserName" type="text" placeholder="Username"/>
+            <input @bind-value="@authUser.Password" type="password" placeholder="Password"/>
+            <button type="submit" id="login-button" @onclick="Register">Регистрация</button>
+        </div>
         <p>@message</p>
     </div>
 </div>
 
 
 @code {
-    //Auth authUser = new();
-    string? username;
-    string? password;
+    RegisterRequest authUser = new();
     string message = "";
 
-    async Task Authenticate()
+    async Task Register()
     {
+        authUser.PasswordConfirm = authUser.Password;
+        authUser.Email = "AAAAAAA@mail.ru";
         message = "Выполняется проверка...";
         HttpClient httpClient = ClientFactory.CreateClient();
         var serializeUser = JsonSerializer.Serialize(authUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("http://localhost:5174/auth", requestContent);
+        var response = await httpClient.PostAsync("http://localhost:5174/auth/register", requestContent);
         message = await response.Content.ReadAsStringAsync();
-        message = response.IsSuccessStatusCode ? "" : "неверные данные";
+        message = response.IsSuccessStatusCode ? "" : await response.Content.ReadAsStringAsync();
         // redirect
     }
 

@@ -22,7 +22,7 @@ public class MessageController : Controller
     public async Task<IActionResult> GetAsync([FromRoute] int id)
     {
         var message = await _context.ChatMessages
-            .Include(x => x.User)
+            .Include(x => x.ApplicationUser)
             .FirstOrDefaultAsync(x => x.Id == id);
         if (message is null)
             return NotFound();
@@ -35,7 +35,7 @@ public class MessageController : Controller
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateMessage request)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => request.UserId == x.Id);
+        var user = await _context.Users.FirstOrDefaultAsync(user => request.UserName == user.UserName);
         if (user is null)
             return NotFound();
         var chat = await _context.Chatrooms.FirstOrDefaultAsync(x => request.ChatId == x.Id);
@@ -45,7 +45,7 @@ public class MessageController : Controller
         var message = new ChatMessage()
         {
             Text = request.Text,
-            User = user,
+            ApplicationUser = user,
             Chatroom = chat,
             CreationDate = DateTime.Now,
             UpdateTime = DateTime.Now

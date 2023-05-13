@@ -2,6 +2,7 @@ using Chat.Database;
 using Chat.Dtos;
 using Chat.Models;
 using Chat.Requests;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,8 +13,9 @@ namespace Chat.Controllers;
 public class ChatController : Controller
 {
     private readonly ChatContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public ChatController(ChatContext context)
+    public ChatController(ChatContext context, UserManager<ApplicationUser> userManager)
     {
         _context = context;
     }
@@ -38,10 +40,10 @@ public class ChatController : Controller
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateChatroom request)
     {
-        if (!_context.Users.All(x => request.Users.Contains(x.Id)))
+        if (!request.UserNames.All(userName => _context.Users.Select(user => user.UserName).Contains(userName)))
             return NotFound();
 
-        var users = await _context.Users.Where(x => request.Users.Contains(x.Id)).ToListAsync();
+        var users = await _context.Users.Where(user => request.UserNames.Contains(user.UserName)).ToListAsync();
         if (users.Count == 0)
             return NotFound();
         
@@ -102,7 +104,7 @@ public class ChatController : Controller
     public async Task<IActionResult> AddUserAsync([FromBody] AddUser request)
     {
         var user = await _context.Users
-            .FirstOrDefaultAsync(user => user.Id == request.UserId && !user.IsDeleted);
+            .FirstOrDefaultAsync(user => user.UserName == request.UserName && !user.IsDeleted);
         
         var chatroom = await _context.Chatrooms
             .FirstOrDefaultAsync(item => item.Id == request.ChatroomId && !item.IsDeleted);
@@ -128,7 +130,7 @@ public class ChatController : Controller
             return NotFound();
         
         var messages = await  _context.ChatMessages
-            .Include(x => x.User)
+            .Include(x => x.ApplicationUser)
             .Where(message => message.Chatroom.Id == id && !message.IsDeleted).ToListAsync();
 
         return Ok(messages.Select(x => new ChatMessageDto(x)));
