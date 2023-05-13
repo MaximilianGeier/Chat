@@ -1,7 +1,9 @@
+using AutoMapper;
 using Chat.Database;
-using Chat.Dtos;
 using Chat.Models;
+using Chat.Entities;
 using Chat.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,13 +16,17 @@ public class ChatController : Controller
 {
     private readonly ChatContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IMapper _mapper;
 
-    public ChatController(ChatContext context, UserManager<ApplicationUser> userManager)
+    public ChatController(ChatContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
     {
         _context = context;
+        _userManager = userManager;
+        _mapper = mapper;
     }
 
     [HttpGet("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> GetAsync([FromRoute] int id)
     {
         var chatroom = await _context.Chatrooms
@@ -32,9 +38,7 @@ public class ChatController : Controller
         if (chatroom.IsDeleted)
             return NotFound();
 
-        var dto = new ChatroomDto(chatroom);
-
-        return Ok(dto);
+        return Ok(_mapper.Map<ChatroomModel>(chatroom));
     }
 
     [HttpPost]
@@ -95,7 +99,7 @@ public class ChatController : Controller
         if (users.Count == 0)
             return NotFound();
 
-        var usersDto = new UserDto[users.Count()];
+        var usersDto = new UserModel[users.Count()];
 
         return Ok(users);
     }
@@ -133,6 +137,6 @@ public class ChatController : Controller
             .Include(x => x.ApplicationUser)
             .Where(message => message.Chatroom.Id == id && !message.IsDeleted).ToListAsync();
 
-        return Ok(messages.Select(x => new ChatMessageDto(x)));
+        return Ok(messages.Select(message => _mapper.Map<ChatMessageModel>(message)));
     }
 }

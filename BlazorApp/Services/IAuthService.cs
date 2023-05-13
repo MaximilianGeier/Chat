@@ -1,4 +1,4 @@
-﻿using Chat.Models;
+﻿using Chat.Entities;
 using Chat.Requests;
 
 namespace Chat.Services;

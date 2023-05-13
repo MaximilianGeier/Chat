@@ -1,4 +1,4 @@
-using Chat.Models;
+using Chat.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

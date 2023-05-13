@@ -1,4 +1,4 @@
-﻿using Chat.Models;
+﻿using Chat.Entities;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Chat.Services;

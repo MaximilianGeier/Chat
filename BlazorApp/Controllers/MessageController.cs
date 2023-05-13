@@ -1,9 +1,11 @@
-﻿using Chat.Database;
-using Chat.Dtos;
+﻿using AutoMapper;
+using Chat.Database;
 using Chat.Models;
+using Chat.Entities;
 using Chat.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Chat.Controllers;
 
@@ -12,10 +14,12 @@ namespace Chat.Controllers;
 public class MessageController : Controller
 {
     private readonly ChatContext _context;
+    private readonly IMapper _mapper;
 
-    public MessageController(ChatContext context)
+    public MessageController(ChatContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
     
     [HttpGet("{id:int}")]
@@ -29,7 +33,7 @@ public class MessageController : Controller
         if (message.IsDeleted)
             return NotFound();
 
-        return Ok(new ChatMessageDto(message));
+        return Ok(_mapper.Map<ChatMessageModel>(message));
     }
 
     [HttpPost]

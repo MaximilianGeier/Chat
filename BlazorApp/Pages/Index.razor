@@ -7,8 +7,9 @@
 @inject IHttpClientFactory ClientFactory
 @using System.Text
 @using System.Text.Json
-@using Chat.Dtos
+@using Chat.Models
 @using Chat.Requests
+@using Microsoft.AspNetCore.SignalR.Client
 
 <header class="page-borders navbar navbar-expand-lg navbar-light py-4" data-pgc-save-partial="main_header" data-pgc-save-partial-operation="load"></header>
 <main class="container d-flex flex-column gap-4 main mb-5 mt-5">
@@ -24,13 +25,13 @@
 
     <div class="form__container">
         <h2>Получение пользователя</h2>
-        <label for="name">id пользователя</label>
-        <input @bind-value="@getUserId" id="name"  type="number" placeholder="id" name="Name">
-        <button @onclick="GetSubmit" class="standard-btn">Получить имя</button>
+        <label for="name">Имя пользователя</label>
+        <input @bind-value="@inputUserName" id="name"  type="text" placeholder="UserName" name="Name">
+        <button @onclick="GetSubmit" class="standard-btn">Получить пользователя</button>
         <p><span class="message">User message:</span> @getUserMessage</p>
     </div>
 
-
+    <p>@Data</p>
 
 </main>
 
@@ -53,13 +54,13 @@
 
 @* получение пользоватя *@
 @code {
-    String getUserId = "";
+    String inputUserName = "";
     string? getUserMessage;
-UserDto userDto;
+UserModel _userModel;
 
     async Task GetSubmit()
     {
-        if (getUserId == "")
+        if (inputUserName == "")
         {
             getUserMessage = "Мы юзерфрендли";
             return;
@@ -68,12 +69,12 @@ UserDto userDto;
         HttpClient httpClient = ClientFactory.CreateClient();
         var serializeUser = JsonSerializer.Serialize(newUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
-        var response = await httpClient.GetAsync("http://localhost:5174/user/" + getUserId);
+        var response = await httpClient.GetAsync("http://localhost:5174/user/" + inputUserName);
         getUserMessage = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
-            userDto = await response.Content.ReadFromJsonAsync<UserDto>();
-            getUserMessage = userDto.Name;
+            _userModel = await response.Content.ReadFromJsonAsync<UserModel>();
+            getUserMessage = _userModel.Id;
             
         }
         else
@@ -82,4 +83,31 @@ UserDto userDto;
         }
     }
 
+}
+
+@code {
+
+    public HubConnection? hubConnection;
+    public string Data;
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:5174/chathub")
+            .Build();     
+        
+        hubConnection.On<string>("ReceiveMessage", (data) =>
+        {
+            Data = data;           
+            InvokeAsync(StateHasChanged);      
+            
+        });
+
+        await hubConnection.StartAsync();
+
+        
+    }
+
+
+    
+    
 }

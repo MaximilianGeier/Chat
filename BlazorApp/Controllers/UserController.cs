@@ -1,75 +1,63 @@
-﻿using Chat.Database;
-using Chat.Dtos;
+﻿using AutoMapper;
+using Chat.Database;
 using Chat.Models;
+using Chat.Entities;
+using Chat.Hubs;
 using Chat.Requests;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chat.Controllers;
 
-/*[Route("/user")]
+[Route("/user")]
 [ApiController]
 public class UserController : Controller
 {
     private readonly ChatContext _context;
-
-    public UserController(ChatContext context)
+    private readonly IMapper _mapper;
+    private readonly IHubContext<ChatHub> _hub;
+    
+    public UserController(ChatContext context, IMapper mapper, IHubContext<ChatHub> hub)
     {
         _context = context;
+        _mapper = mapper;
+        _hub = hub;
     }
     
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetAsync([FromRoute] int id)
+    [HttpGet("{username}")]
+    public async Task<IActionResult> GetAsync([FromRoute] string userName)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
         if (user is null)
             return NotFound();
         if (user.IsDeleted)
             return NotFound();
+        
+        //await _hub.Clients.All.SendAsync("ReceiveMessage", "send some data");
+        _hub.Clients.Groups("group2").SendAsync("ReceiveMessage", "send some data");
 
-        return Ok(new UserDto(user));
+        return Ok(_mapper.Map<UserModel>(user));
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateUser request)
+    [HttpPatch("{username}")]
+    public async Task<IActionResult> UpdateAsync([FromBody] UpdateUser request, [FromRoute] string userName)
     {
-        var same = await _context.Users
-            .Where(x => x.Login == request.Login)
-            .ToArrayAsync();
-
-        if (same.Count() != 0)
-            return Conflict();
-
-        var user = new User
-        {
-            Name = request.Name,
-            Login = request.Login
-        };
-        _context.Users.Add(user);
-
-        await _context.SaveChangesAsync();
-
-        return Ok(User.Identity.IsAuthenticated.ToString());
-    }
-    
-    [HttpPatch("{id:int}")]
-    public async Task<IActionResult> UpdateAsync([FromBody] UpdateUser request, [FromRoute] int id)
-    {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
         if (user is null)
             return NotFound();
 
-        user.Name = request.Name;
+        user.UserName = request.Name;
 
         await _context.SaveChangesAsync();
         
         return Ok();
     }
     
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
+    [HttpDelete("{username}")]
+    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] string userName)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
         if (user is null)
             return NotFound();
 
@@ -79,4 +67,4 @@ public class UserController : Controller
 
         return Ok();
     }
-}*/
+}

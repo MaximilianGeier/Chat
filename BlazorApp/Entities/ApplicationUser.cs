@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
-namespace Chat.Models;
+namespace Chat.Entities;
 
 public class ApplicationUser : IdentityUser
 {

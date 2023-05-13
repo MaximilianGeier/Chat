@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Components.Web;
 using BlazorApp.Data;
 using Chat;
 using Chat.Database;
-using Chat.Models;
+using Chat.Entities;
+using Chat.Hubs;
+using Chat.Mappers;
 using Chat.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,8 +21,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddDbContext<ChatContext>(x => x.UseMySQL(MySqlConnectionDataHolder.ConnectionData));
+builder.Services.AddAutoMapper(typeof(AppMappingProfile));
+builder.Services.AddSignalR();
 
-//builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ChatContext>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -60,6 +63,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapBlazorHub();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHub<ChatHub>("/chathub");
+});
 app.MapFallbackToPage("/_Host");
 
 app.Run();

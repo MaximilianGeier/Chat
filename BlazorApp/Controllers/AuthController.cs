@@ -1,4 +1,4 @@
-﻿using Chat.Models;
+﻿using Chat.Entities;
 using Chat.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
