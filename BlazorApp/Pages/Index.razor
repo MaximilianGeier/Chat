@@ -1,0 +1,86 @@
+﻿@page "/"
+
+<PageTitle>Index</PageTitle>
+
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components
+@inject IHttpClientFactory ClientFactory
+@using System.Text
+@using System.Text.Json
+@using Chat.Dtos
+@using Chat.Requests
+
+<header class="page-borders navbar navbar-expand-lg navbar-light py-4" data-pgc-save-partial="main_header" data-pgc-save-partial-operation="load"></header>
+<main class="container d-flex flex-column gap-4 main mb-5 mt-5">
+<div class="form__container">
+    <h2>Добавление пользователя</h2>
+    <label for="name">Имя</label>
+    <input @bind-value="@newUser.Name" id="name" type="text" placeholder="Имя" name="Name">
+    <label for="login">Логин</label>
+    <input @bind-value="@newUser.Login" id="login" type="text" placeholder="Логин" name="Login">
+    <button @onclick="AddSubmit" class="standard-btn">Добавить</button>
+    <p><span class="message">User message:</span> @newMessage</p>
+</div>
+
+    <div class="form__container">
+        <h2>Получение пользователя</h2>
+        <label for="name">id пользователя</label>
+        <input @bind-value="@getUserId" id="name"  type="number" placeholder="id" name="Name">
+        <button @onclick="GetSubmit" class="standard-btn">Получить имя</button>
+        <p><span class="message">User message:</span> @getUserMessage</p>
+    </div>
+
+
+
+</main>
+
+@* добавление пользоватя *@
+@code {
+    CreateUser newUser = new();
+    string? newMessage;
+
+    async Task AddSubmit()
+    {
+        newMessage = "Отправка данных";
+        HttpClient httpClient = ClientFactory.CreateClient();
+        var serializeUser = JsonSerializer.Serialize(newUser);
+        var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("http://localhost:5174/user", requestContent);
+        newMessage = await response.Content.ReadAsStringAsync();
+        newMessage = response.IsSuccessStatusCode ? "Юзер добавлен" : "Удивительно, похоже ты допустил ошибку или ввел существующий логин. Невероятная удача!!!";
+    }
+
+}
+
+@* получение пользоватя *@
+@code {
+    String getUserId = "";
+    string? getUserMessage;
+UserDto userDto;
+
+    async Task GetSubmit()
+    {
+        if (getUserId == "")
+        {
+            getUserMessage = "Мы юзерфрендли";
+            return;
+        }
+        getUserMessage = "Получение данных";
+        HttpClient httpClient = ClientFactory.CreateClient();
+        var serializeUser = JsonSerializer.Serialize(newUser);
+        var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
+        var response = await httpClient.GetAsync("http://localhost:5174/user/" + getUserId);
+        getUserMessage = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+        {
+            userDto = await response.Content.ReadFromJsonAsync<UserDto>();
+            getUserMessage = userDto.Name;
+            
+        }
+        else
+        {
+            getUserMessage = "Не знаю такого!";
+        }
+    }
+
+}
