@@ -1,5 +1,7 @@
 ﻿using Chat.Entities;
+using Chat.Models;
 using Chat.Requests;
+using Chat.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +24,11 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var user = await _userManager.FindByNameAsync(request.UserName);
-        if (user == null) return BadRequest("User does not exist");
+        if (user == null) 
+            return BadRequest("User does not exist");
         var singInResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-        if (!singInResult.Succeeded) return BadRequest("Invalid password");
+        if (!singInResult.Succeeded) 
+            return BadRequest("Invalid password");
         await _signInManager.SignInAsync(user, request.RememberMe);
         return Ok();
     }
@@ -34,9 +38,10 @@ public class AuthController : ControllerBase
     {
         var user = new ApplicationUser();
         user.UserName = parameters.UserName;
-        user.Login = parameters.Email;
+        user.Email = parameters.Email;
         var result = await _userManager.CreateAsync(user, parameters.Password);
-        if (!result.Succeeded) return BadRequest(result.Errors.FirstOrDefault()?.Description);
+        if (!result.Succeeded) 
+            return BadRequest(result.Errors.FirstOrDefault()?.Description);
         
         return await Login(new LoginRequest
         {
@@ -53,15 +58,13 @@ public class AuthController : ControllerBase
         return Ok();
     }
     
-    /*[HttpGet]
-    public User CurrentUserInfo()
+    [HttpGet("currentuser")]
+    public UserModel CurrentUserInfo()
     {
-        return new User
+        return new UserModel
         {
             IsAuthenticated = User.Identity.IsAuthenticated,
             UserName = User.Identity.Name,
-            Claims = User.Claims
-                .ToDictionary(c => c.Type, c => c.Value)
         };
-    }*/
+    }
 }

@@ -9,6 +9,7 @@ using Chat.Hubs;
 using Chat.Mappers;
 using Chat.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,9 +21,13 @@ builder.Services.AddRazorPages();
 builder.Services.AddHttpClient(); 
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddDbContext<ChatContext>(x => x.UseMySQL(MySqlConnectionDataHolder.ConnectionData));
+builder.Services.AddDbContext<ChatContext>(opt => opt.UseMySQL(MySqlConnectionDataHolder.ConnectionData));
 builder.Services.AddAutoMapper(typeof(AppMappingProfile));
 builder.Services.AddSignalR();
+builder.Services.AddScoped(sp => new HttpClient 
+{ 
+    BaseAddress = new Uri("http://localhost:5174/") 
+});
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ChatContext>();
 builder.Services.ConfigureApplicationCookie(options =>

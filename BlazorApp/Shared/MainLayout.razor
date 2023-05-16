@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Authorization  
 @inject AuthenticationStateProvider AuthenticationStateProvider  
 
@@ -19,14 +19,4 @@
     </main>
     @* Hello. It is my comment. If you see it, you are fucking hacker! Amazing!!! *@
 </div>
-@* *@
-@* @code *@
-@* { *@
-@*     bool isAuth = false;   *@
-@*     protected override async Task OnInitializedAsync()   *@
-@*     {   *@
-@*         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();   *@
-@*         var user = authState.User; *@
-@*         isAuth = user.Identity.IsAuthenticated; *@
-@*     }  *@
-@* } *@
+

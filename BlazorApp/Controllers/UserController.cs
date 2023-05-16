@@ -4,6 +4,7 @@ using Chat.Models;
 using Chat.Entities;
 using Chat.Hubs;
 using Chat.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public class UserController : Controller
     }
     
     [HttpGet("{username}")]
+    [Authorize]
     public async Task<IActionResult> GetAsync([FromRoute] string userName)
     {
         var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
@@ -33,9 +35,6 @@ public class UserController : Controller
             return NotFound();
         if (user.IsDeleted)
             return NotFound();
-        
-        //await _hub.Clients.All.SendAsync("ReceiveMessage", "send some data");
-        _hub.Clients.Groups("group2").SendAsync("ReceiveMessage", "send some data");
 
         return Ok(_mapper.Map<UserModel>(user));
     }
