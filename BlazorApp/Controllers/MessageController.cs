@@ -1,7 +1,10 @@
-﻿using AutoMapper;
+﻿using System.Text;
+using System.Text.Json;
+using AutoMapper;
 using Chat.Database;
 using Chat.Models;
 using Chat.Entities;
+using Chat.Hubs;
 using Chat.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,15 +18,17 @@ public class MessageController : Controller
 {
     private readonly ChatContext _context;
     private readonly IMapper _mapper;
+    private readonly IHubContext<ChatHub> _hub;
 
-    public MessageController(ChatContext context, IMapper mapper)
+    public MessageController(ChatContext context, IMapper mapper, IHubContext<ChatHub> hub)
     {
         _context = context;
         _mapper = mapper;
+        _hub = hub;
     }
     
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetAsync([FromRoute] int id)
+    public async Task<IActionResult> GetAsync([FromRoute] long id)
     {
         var message = await _context.ChatMessages
             .Include(x => x.ApplicationUser)
@@ -55,7 +60,13 @@ public class MessageController : Controller
             UpdateTime = DateTime.Now
         };
         _context.Add(message);
-        await _context.SaveChangesAsync();
+        var c = await _context.SaveChangesAsync();
+        ChatMessageModel chatMessageModel = _mapper.Map<ChatMessageModel>(message);
+
+        var serializeMsg = JsonSerializer.Serialize(chatMessageModel);
+        Console.WriteLine("(((((((((((((((");
+        Console.WriteLine(serializeMsg);
+        await _hub.Clients.Groups("group1").SendAsync("ReceiveNewMessage", chatMessageModel);
 
         return Ok();
     }

@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Text;
+using System.Text.Json;
+using Chat.Models;
+using Microsoft.AspNetCore.SignalR;
 using MySqlX.XDevAPI;
 
 namespace Chat.Hubs;

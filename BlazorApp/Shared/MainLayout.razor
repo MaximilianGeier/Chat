@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization  
+@inject AuthenticationStateProvider AuthenticationStateProvider  
 
 <PageTitle>BlazorApp</PageTitle>
-
 <div class="page">
     <div class="sidebar">
         <NavMenu/>
@@ -9,13 +10,23 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="/auth" target="_blank">Sign in</a>
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
+                <a href="/auth" target="_blank">Sign in</a>
+                <a href="/login" target="_blank">Log in</a>
+            </div>
         <article class="content px-4">
             @Body
         </article>
     </main>
     @* Hello. It is my comment. If you see it, you are fucking hacker! Amazing!!! *@
 </div>
+@* *@
+@* @code *@
+@* { *@
+@*     bool isAuth = false;   *@
+@*     protected override async Task OnInitializedAsync()   *@
+@*     {   *@
+@*         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();   *@
+@*         var user = authState.User; *@
+@*         isAuth = user.Identity.IsAuthenticated; *@
+@*     }  *@
+@* } *@

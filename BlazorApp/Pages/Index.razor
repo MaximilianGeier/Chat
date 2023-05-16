@@ -13,20 +13,45 @@
 
 <header class="page-borders navbar navbar-expand-lg navbar-light py-4" data-pgc-save-partial="main_header" data-pgc-save-partial-operation="load"></header>
 <main class="container d-flex flex-column gap-4 main mb-5 mt-5">
-<div class="form__container">
-    <h2>Добавление пользователя</h2>
-    <label for="name">Имя</label>
-    <input @bind-value="@newUser.Name" id="name" type="text" placeholder="Имя" name="Name">
-    <label for="login">Логин</label>
-    <input @bind-value="@newUser.Login" id="login" type="text" placeholder="Логин" name="Login">
-    <button @onclick="AddSubmit" class="standard-btn">Добавить</button>
-    <p><span class="message">User message:</span> @newMessage</p>
-</div>
+    
+    <div class="chat-container">
+        @if (allMessages is not null)
+        {
+            @foreach (var item in allMessages)
+            {
+                <p class="msg send">
+                    @item.Text
+                </p>
+            }
+        }
+    </div>
+    
+    <EditForm Model="message" OnSubmit="@createMessage">
+        <h2>Отправка сообщения</h2>
+        <input @bind-value="@message.Text"/>
+        <button type="submit">Send</button>
+    </EditForm>
+
+    <EditForm Model="chatroom" OnSubmit="@createChatroom">
+        <h2>Добавление чата</h2>
+        <input placeholder="Название чата" @bind-value="@chatroom.Title"/>
+        <button type="submit">Добавить чат</button>
+    </EditForm>
+
+    <EditForm Model="@newUser" OnSubmit="@AddSubmit" class="form__container">
+        <h2>Добавление пользователя</h2>
+        <label for="name">Имя</label>
+        <input @bind-value="@newUser.Name" id="name" type="text" placeholder="Имя" name="Name">
+        <label for="login">Логин</label>
+        <input @bind-value="@newUser.Login" id="login" type="text" placeholder="Логин" name="Login">
+        <button class="standard-btn">Добавить</button>
+        <p><span class="message">User message:</span> @newMessage</p>
+    </EditForm>
 
     <div class="form__container">
         <h2>Получение пользователя</h2>
         <label for="name">Имя пользователя</label>
-        <input @bind-value="@inputUserName" id="name"  type="text" placeholder="UserName" name="Name">
+        <input @bind-value="@inputUserName" id="name" type="text" placeholder="UserName" name="Name">
         <button @onclick="GetSubmit" class="standard-btn">Получить пользователя</button>
         <p><span class="message">User message:</span> @getUserMessage</p>
     </div>
@@ -67,8 +92,6 @@ UserModel _userModel;
         }
         getUserMessage = "Получение данных";
         HttpClient httpClient = ClientFactory.CreateClient();
-        var serializeUser = JsonSerializer.Serialize(newUser);
-        var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
         var response = await httpClient.GetAsync("http://localhost:5174/user/" + inputUserName);
         getUserMessage = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
@@ -86,12 +109,23 @@ UserModel _userModel;
 }
 
 @code {
-
+    List<ChatMessageModel> allMessages;
+    
     public HubConnection? hubConnection;
     public string Data;
     protected override async Task OnInitializedAsync()
     {
-        hubConnection = new HubConnectionBuilder()
+        // получение всех сообщений
+        var chatId = 1;
+        HttpClient httpClient = ClientFactory.CreateClient();
+        var response = await httpClient.GetAsync("http://localhost:5174/chat/messages/" + chatId);
+        getUserMessage = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+            allMessages = await response.Content.ReadFromJsonAsync<List<ChatMessageModel>>();
+
+
+
+            hubConnection = new HubConnectionBuilder()
             .WithUrl("http://localhost:5174/chathub")
             .Build();     
         
@@ -101,13 +135,47 @@ UserModel _userModel;
             InvokeAsync(StateHasChanged);      
             
         });
+        
+        hubConnection.On<ChatMessageModel>("ReceiveNewMessage", (data) =>
+        {
+            if (data != null) allMessages?.Add(data);
+            InvokeAsync(StateHasChanged);      
+            
+        });
 
         await hubConnection.StartAsync();
 
         
     }
+}
 
+@*Отправка сообщения*@
+@code
+{
+    CreateMessage message = new();
+    async Task createMessage()
+    {
+        message.UserName = "q";
+        message.ChatId = 1;
+        HttpClient httpClient = ClientFactory.CreateClient();
+        var serializeMsg = JsonSerializer.Serialize(message);
+        var requestContent = new StringContent(serializeMsg, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("http://localhost:5174/chat/message", requestContent);
+    }
+}
 
-    
-    
+@*Добавление чата*@
+@code
+{
+    CreateChatroom chatroom = new();
+    async Task createChatroom()
+    {
+        List<string> addedUsers = new List<string> { "q" };
+        chatroom.UserNames = addedUsers;
+        
+        HttpClient httpClient = ClientFactory.CreateClient();
+        var serializeChatroom = JsonSerializer.Serialize(chatroom);
+        var requestContent = new StringContent(serializeChatroom, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("http://localhost:5174/chat", requestContent);
+    }
 }
