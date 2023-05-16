@@ -4,15 +4,22 @@
 
 <PageTitle>BlazorApp</PageTitle>
 <div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
+    <AuthorizeView>
+        <Authorized>
+            <div class="sidebar">
+                <NavMenu/>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+        </NotAuthorized>
+    </AuthorizeView>
+
 
     <main>
         <div class="top-row px-4">
-                <a href="/auth" target="_blank">Sign in</a>
-                <a href="/login" target="_blank">Log in</a>
-            </div>
+            <a href="/auth" target="_blank">Sign in</a>
+            <a href="/login" target="_blank">Log in</a>
+        </div>
         <article class="content px-4">
             @Body
         </article>

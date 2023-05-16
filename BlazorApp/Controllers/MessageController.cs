@@ -6,6 +6,8 @@ using Chat.Models;
 using Chat.Entities;
 using Chat.Hubs;
 using Chat.Requests;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
@@ -42,14 +44,15 @@ public class MessageController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateAsync([FromBody] CreateMessage request)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(user => request.UserName == user.UserName);
+        var user = await _context.Users.Where(user => user.UserName == User.Identity.Name).FirstOrDefaultAsync();//await _context.Users.FirstOrDefaultAsync(user => request.UserName == user.UserName);
         if (user is null)
-            return NotFound();
+            return NotFound("Authorized user not found");
         var chat = await _context.Chatrooms.FirstOrDefaultAsync(x => request.ChatId == x.Id);
         if (chat is null)
-            return NotFound();
+            return NotFound("Chatroom not found");
         
         var message = new ChatMessage()
         {

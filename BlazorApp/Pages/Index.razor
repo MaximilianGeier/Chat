@@ -7,9 +7,12 @@
 @inject IHttpClientFactory ClientFactory
 @using System.Text
 @using System.Text.Json
+@using Chat.Entities
 @using Chat.Models
 @using Chat.Requests
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.SignalR.Client
+@inject UserManager<ApplicationUser> _userManager
 
 <header class="page-borders navbar navbar-expand-lg navbar-light py-4" data-pgc-save-partial="main_header" data-pgc-save-partial-operation="load"></header>
 <main class="container d-flex flex-column gap-4 main mb-5 mt-5">
@@ -20,7 +23,7 @@
             @foreach (var item in allMessages)
             {
                 <p class="msg send">
-                    @item.Text
+                    @item.UserName: @item.Text
                 </p>
             }
         }
@@ -155,7 +158,6 @@ UserModel _userModel;
     CreateMessage message = new();
     async Task createMessage()
     {
-        message.UserName = "q";
         message.ChatId = 1;
         HttpClient httpClient = ClientFactory.CreateClient();
         var serializeMsg = JsonSerializer.Serialize(message);
@@ -170,7 +172,7 @@ UserModel _userModel;
     CreateChatroom chatroom = new();
     async Task createChatroom()
     {
-        List<string> addedUsers = new List<string> { "q" };
+        List<string> addedUsers = new List<string> { };
         chatroom.UserNames = addedUsers;
         
         HttpClient httpClient = ClientFactory.CreateClient();

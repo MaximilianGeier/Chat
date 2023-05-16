@@ -23,6 +23,7 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
+        Console.WriteLine("LOGIN!!!!!!!!!!!");
         var user = await _userManager.FindByNameAsync(request.UserName);
         if (user == null) 
             return BadRequest("User does not exist");
@@ -30,6 +31,7 @@ public class AuthController : ControllerBase
         if (!singInResult.Succeeded) 
             return BadRequest("Invalid password");
         await _signInManager.SignInAsync(user, request.RememberMe);
+        Console.WriteLine("LOGIN2!!!!!!!!!!!");
         return Ok();
     }
     

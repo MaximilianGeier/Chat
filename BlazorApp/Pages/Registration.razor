@@ -8,6 +8,9 @@
 @using System.Text.Json
 @using Chat.Models
 @using Chat.Requests
+@using Chat.Services
+@inject CustomStateProvider authStateProvider
+@inject NavigationManager navigationManager
 
 <PageTitle>Index</PageTitle>
 
@@ -34,14 +37,23 @@
         authUser.PasswordConfirm = authUser.Password;
         authUser.Email = "AAAAAAA@mail.ru";
         message = "Выполняется проверка...";
-        HttpClient httpClient = ClientFactory.CreateClient();
+        /*HttpClient httpClient = ClientFactory.CreateClient();
         var serializeUser = JsonSerializer.Serialize(authUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync("http://localhost:5174/auth/register", requestContent);
         if(response.IsSuccessStatusCode)
             NavigationManager.NavigateTo("/");
         else
-            message = await response.Content.ReadAsStringAsync();
+            message = await response.Content.ReadAsStringAsync();*/
+        try
+        {
+            await authStateProvider.Register(authUser);
+            navigationManager.NavigateTo("");
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
     }
 
 }

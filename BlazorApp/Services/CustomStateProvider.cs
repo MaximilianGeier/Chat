@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Chat.Models;
 using Chat.Requests;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -19,6 +20,7 @@ public class CustomStateProvider : AuthenticationStateProvider
         try
         {
             var userInfo = await GetCurrentUser();
+            Debug.WriteLine("THEEEEEEEEEEEEEERE: " + userInfo.IsAuthenticated.ToString());
             if (userInfo.IsAuthenticated)
             {
                 var claims = new[]

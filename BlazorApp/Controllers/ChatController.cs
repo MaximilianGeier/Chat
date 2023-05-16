@@ -42,12 +42,16 @@ public class ChatController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateAsync([FromBody] CreateChatroom request)
     {
         if (!request.UserNames.All(userName => _context.Users.Select(user => user.UserName).Contains(userName)))
             return NotFound();
 
-        var users = await _context.Users.Where(user => request.UserNames.Contains(user.UserName)).ToListAsync();
+        var users = new List<ApplicationUser>();
+        if (request.UserNames.Any())
+            users.AddRange(await _context.Users.Where(user => request.UserNames.Contains(user.UserName)).ToListAsync());
+        users.Add(await _context.Users.Where(user => user.UserName == User.Identity.Name).FirstOrDefaultAsync());
         if (users.Count == 0)
             return NotFound();
         
