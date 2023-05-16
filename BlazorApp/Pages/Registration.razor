@@ -3,6 +3,7 @@
 @inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components
 @inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
 @using System.Text
 @using System.Text.Json
 @using Chat.Models
@@ -14,11 +15,11 @@
     <div className="container">
         <h1>Chack chat</h1>
 
-        <div className="form">
+        <EditForm Model="@authUser" OnSubmit="Register" className="form">
             <input @bind-value="@authUser.UserName" type="text" placeholder="Username"/>
             <input @bind-value="@authUser.Password" type="password" placeholder="Password"/>
-            <button type="submit" id="login-button" @onclick="Register">Регистрация</button>
-        </div>
+            <button type="submit" id="login-button">Регистрация</button>
+        </EditForm>
         <p>@message</p>
     </div>
 </div>
@@ -37,9 +38,10 @@
         var serializeUser = JsonSerializer.Serialize(authUser);
         var requestContent = new StringContent(serializeUser, Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync("http://localhost:5174/auth/register", requestContent);
-        message = await response.Content.ReadAsStringAsync();
-        message = response.IsSuccessStatusCode ? "" : await response.Content.ReadAsStringAsync();
-        // redirect
+        if(response.IsSuccessStatusCode)
+            NavigationManager.NavigateTo("/");
+        else
+            message = await response.Content.ReadAsStringAsync();
     }
 
 }
