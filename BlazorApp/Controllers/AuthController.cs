@@ -1,7 +1,9 @@
-﻿using Chat.Entities;
+﻿using System.Security.Claims;
+using Chat.Entities;
 using Chat.Models;
 using Chat.Requests;
 using Chat.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,18 +25,16 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        Console.WriteLine("LOGIN!!!!!!!!!!!");
         var user = await _userManager.FindByNameAsync(request.UserName);
         if (user == null) 
             return BadRequest("User does not exist");
         var singInResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
         if (!singInResult.Succeeded) 
             return BadRequest("Invalid password");
-        await _signInManager.SignInAsync(user, request.RememberMe);
-        Console.WriteLine("LOGIN2!!!!!!!!!!!");
+        await _signInManager.SignInAsync(user, true/*request.RememberMe*/);
         return Ok();
     }
-    
+
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest parameters)
     {
@@ -63,10 +63,12 @@ public class AuthController : ControllerBase
     [HttpGet("currentuser")]
     public UserModel CurrentUserInfo()
     {
+        Console.WriteLine($"{User.Identity.Name} {User.Identity.IsAuthenticated}");
         return new UserModel
         {
             IsAuthenticated = User.Identity.IsAuthenticated,
             UserName = User.Identity.Name,
+            Claims = User.Claims.ToDictionary(c => c.Type, c => c.Value)
         };
     }
 }

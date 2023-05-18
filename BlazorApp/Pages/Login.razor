@@ -32,8 +32,16 @@
     {
         authUser.Email = "AAAA";
         message = "Выполняется проверка...";
-
-        string error = null;
+        
+        HttpClient httpClient = ClientFactory.CreateClient();
+        var response = await httpClient.PostAsJsonAsync("http://localhost:5174/auth/login", authUser);
+        if(response.IsSuccessStatusCode)
+            navigationManager.NavigateTo("");
+        else
+            message = await response.Content.ReadAsStringAsync();
+        
+        
+        /*string error = null;
         try
         {
             await authStateProvider.Login(authUser);
@@ -43,7 +51,7 @@
         catch (Exception ex)
         {
             message = ex.Message;
-        }
+        }*/
 
     // redirect
     }

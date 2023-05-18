@@ -42,9 +42,13 @@ public class ChatController : Controller
     }
 
     [HttpPost]
-    [Authorize]
     public async Task<IActionResult> CreateAsync([FromBody] CreateChatroom request)
     {
+        if (User.Identity.IsAuthenticated)
+            Console.WriteLine("AUTHENTED!!!!");
+        else
+            Console.WriteLine("NOT AUTHENTED!!!!");
+        
         if (!request.UserNames.All(userName => _context.Users.Select(user => user.UserName).Contains(userName)))
             return NotFound();
 

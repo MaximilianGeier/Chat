@@ -37,3 +37,6 @@ msbuild.wrn
 .vs/
 
 MySqlConnectionDataHolder.cs
+/BlazorApp
+/RIP
+/Chat

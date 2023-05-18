@@ -27,7 +27,7 @@ public class CustomStateProvider : AuthenticationStateProvider
                 {
                     new Claim(ClaimTypes.Name, _currentUser.UserName),
                     //new Claim(ClaimTypes.Email, _currentUser.Email)
-                };//.Concat(_currentUser.Claims.Select(c => new Claim(c.Key, c.Value)));
+                }.Concat(_currentUser.Claims.Select(c => new Claim(c.Key, c.Value)));
                 identity = new ClaimsIdentity(claims, "Server authentication");
             }
         }
@@ -37,9 +37,25 @@ public class CustomStateProvider : AuthenticationStateProvider
         }
         return new AuthenticationState(new ClaimsPrincipal(identity));
     }
+    /*public override Task<AuthenticationState> GetAuthenticationStateAsync()
+    {
+        var identity = new ClaimsIdentity();
+
+        Debug.WriteLine("THEEEEEEEEEEEEEERE: ");
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, "dad"),
+            //new Claim(ClaimTypes.Email, _currentUser.Email)
+        };//.Concat(_currentUser.Claims.Select(c => new Claim(c.Key, c.Value)));
+        identity = new ClaimsIdentity(claims, "Server authentication");
+        
+
+        return Task.FromResult(new AuthenticationState(new ClaimsPrincipal(identity)));//new AuthenticationState(new ClaimsPrincipal(identity));
+    }*/
     private async Task<UserModel> GetCurrentUser()
     {
-        if (_currentUser != null && _currentUser.IsAuthenticated) return _currentUser;
+        if (_currentUser != null && _currentUser.IsAuthenticated) 
+            return _currentUser;
         _currentUser = await api.CurrentUserInfo();
         return _currentUser;
     }
