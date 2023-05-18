@@ -46,13 +46,13 @@
             <p>@newMessage</p>
         </EditForm>
         
-        <div class="form__container" Model="@delUser" OnSubmit="@AddSubmit">
+        <EditForm class="form__container" Model="@deleteUserFromChat" OnSubmit="@DeleteUserFromChat">
             <h2>Удаление пользователя</h2>
             <label for="name">Никнейм</label>
-            <input class="form-control" @bind-value="@delUser" id="name" type="text" placeholder="Имя" name="Name">
-            <button class="btn-secondary">Добавить</button>
+            <input class="form-control" @bind-value="@deleteUserFromChat.UserName" id="name" type="text" placeholder="Имя" name="Name">
+            <button class="btn-secondary" type="submit">Удалить</button>
             <p>@delUserMessage</p>
-        </div>
+        </EditForm>
     </div>
     <button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
 </main>
@@ -155,6 +155,20 @@
         chatId = Int32.Parse(PageId);
         await FetchMessages();
         await base.OnParametersSetAsync();
+    }
+}
+
+
+@code {
+
+    DeleteUserFromChat deleteUserFromChat = new();
+    
+    async Task DeleteUserFromChat()
+    {
+        delUserMessage = "Удаляёю";
+        deleteUserFromChat.ChatId = chatId;
+        var request = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user", deleteUserFromChat);
+        delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + (await request.Content.ReadAsStringAsync());
     }
 
 }

@@ -169,18 +169,22 @@ public class ChatController : Controller
     [Authorize]
     public async Task<IActionResult> DeleteUserAsync([FromBody] DeleteUserFromChat request)
     {
-        var chatroom = await _context.Chatrooms.FirstOrDefaultAsync(chatroom => chatroom.Id == request.ChatId);
+        var chatroom = await _context.Chatrooms
+            .Include(ct => ct.Users)
+            .FirstOrDefaultAsync(chatroom => chatroom.Id == request.ChatId && !chatroom.IsDeleted);
         if (chatroom == null)
-            return NotFound("Chatroom not found!");
+            return NotFound("Чат не найден!");
 
-        var user = await _context.Users.FirstOrDefaultAsync(user => user.UserName == request.UserName);
+        var user = chatroom.Users
+            .FirstOrDefault(user => user.UserName == request.UserName);
         if (user == null)
-            return NotFound("Chatroom not found!");
-
-        if (!chatroom.Users.Any(user => user.UserName == User.Identity.Name))
-            return Forbid();
+            return NotFound("Пользователь не найден!");
+        
+        if (!chatroom.Users.Any(u => u.UserName == User.Identity.Name))
+            return new ObjectResult( User.Identity.Name + " Вы не состоите в чате!") { StatusCode = 403 };
 
         chatroom.Users.Remove(user);
+        user.Chatrooms.Remove(chatroom);
 
         await _context.SaveChangesAsync();
 

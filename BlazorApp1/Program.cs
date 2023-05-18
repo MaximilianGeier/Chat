@@ -9,6 +9,7 @@ using BlazorApp1.Data;
 using BlazorApp1.Entities;
 using BlazorApp1.Hubs;
 using BlazorApp1.Mappers;
+using Chat;
 using Chat.Services;
 using Microsoft.AspNetCore.Identity;
 
