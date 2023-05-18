@@ -40,6 +40,13 @@
     overflow: auto;
 }
 
+.msg{
+    padding: 8px;
+    border-radius: 10px;
+    background-color: #33393F;
+    color: white;
+}
+
 .receive{
     align-self: flex-start;
 }
@@ -67,4 +74,16 @@
 
 .selected{
     background-color: #0041a4;
+}
+
+.forms{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.form--send-msg{
+    display: flex;
+    flex-direction: row;
+    margin-top: 0;
 }

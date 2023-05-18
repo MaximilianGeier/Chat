@@ -30,6 +30,7 @@ public class MessageController : Controller
     }
     
     [HttpGet("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> GetAsync([FromRoute] long id)
     {
         var message = await _context.ChatMessages
@@ -67,14 +68,13 @@ public class MessageController : Controller
         ChatMessageModel chatMessageModel = _mapper.Map<ChatMessageModel>(message);
 
         var serializeMsg = JsonSerializer.Serialize(chatMessageModel);
-        Console.WriteLine("(((((((((((((((");
-        Console.WriteLine(serializeMsg);
         await _hub.Clients.Groups("group1").SendAsync("ReceiveNewMessage", chatMessageModel);
 
         return Ok();
     }
 
     [HttpPatch("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> UpdateAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
         var message = await _context.ChatMessages.FirstOrDefaultAsync(x => x.Id == id);
@@ -91,6 +91,7 @@ public class MessageController : Controller
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
         var message = await _context.ChatMessages.FirstOrDefaultAsync(x => x.Id == id);

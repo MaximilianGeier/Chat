@@ -26,6 +26,7 @@ public class UserController : Controller
     }
     
     [HttpGet("{username}")]
+    [Authorize]
     public async Task<IActionResult> GetAsync([FromRoute] string userName)
     {
         Console.WriteLine(User.Identity.IsAuthenticated);
@@ -39,6 +40,7 @@ public class UserController : Controller
     }
 
     [HttpPatch("{username}")]
+    [Authorize]
     public async Task<IActionResult> UpdateAsync([FromBody] UpdateUser request, [FromRoute] string userName)
     {
         var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
@@ -53,7 +55,8 @@ public class UserController : Controller
     }
     
     [HttpDelete("{username}")]
-    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] string userName)
+    [Authorize]
+    public async Task<IActionResult> DeleteAsync([FromRoute] string userName)
     {
         var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
         if (user is null)

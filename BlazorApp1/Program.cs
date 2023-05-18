@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using BlazorApp1;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -8,7 +9,7 @@ using BlazorApp1.Data;
 using BlazorApp1.Entities;
 using BlazorApp1.Hubs;
 using BlazorApp1.Mappers;
-using Chat;
+using Chat.Services;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,7 @@ builder.Services
     .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddAutoMapper(typeof(AppMappingProfile));
+builder.Services.AddSingleton<AuthRequestService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

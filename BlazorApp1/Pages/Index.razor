@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/{PageId}"
 
 <PageTitle>Index</PageTitle>
 
@@ -14,118 +14,85 @@
 @using Newtonsoft.Json
 @using JsonSerializer = System.Text.Json.JsonSerializer
 @using System.Net
+@using Chat.Services
 @inject HttpClient HttpClient
 @inject IHttpContextAccessor httpContextAccessor
+@inject AuthRequestService AuthRequestService
+@inject NavigationManager NavigationManager
 
 <main class="container d-flex flex-column gap-4 main mb-5 mt-5">
-    <div class="chats">
-        @if (allChats is not null)
-        {
-            @foreach (var item in allChats)
-            {
-                <div @onclick="() => OnChatClick(item.Id)" class="chats-item">
-                    @item.Title
-                </div>
-            }
-        }
-    </div>
-    
     <div class="chat-container">
         @if (allMessages is not null)
         {
             @foreach (var item in allMessages)
             {
                 <p class="msg send">
-                    @item.UserName: @item.Text
+                    <span class="font-weight-bold">@item.UserName:</span> @item.Text
                 </p>
             }
         }
     </div>
-    
-    <EditForm Model="message" OnSubmit="@createMessage">
-        <h2>Отправка сообщения</h2>
-        <input @bind-value="@message.Text"/>
-        <button type="submit">Send</button>
-    </EditForm>
+        <EditForm class="form--send-msg" Model="message" OnSubmit="@createMessage">
+            <input class="form-control" @bind-value="@message.Text"/>
+            <button class="btn-secondary" type="submit">Send</button>
+        </EditForm>
 
-    <EditForm Model="chatroom" OnSubmit="@createChatroom">
-        <h2>Добавление чата</h2>
-        <input placeholder="Название чата" @bind-value="@chatroom.Title"/>
-        <button type="submit">Добавить чат</button>
-    </EditForm>
-
-    <EditForm Model="@newUser" OnSubmit="@AddSubmit" class="form__container">
-        <h2>Добавление пользователя</h2>
-        <label for="name">Имя</label>
-        <input @bind-value="@newUser.UserName" id="name" type="text" placeholder="Имя" name="Name">
-        <button class="standard-btn">Добавить</button>
-        <p><span class="message">User message:</span> @newMessage</p>
-    </EditForm>
-
-    <div class="form__container">
-        <h2>Получение пользователя</h2>
-        <label for="name">Имя пользователя</label>
-        <input @bind-value="@inputUserName" id="name" type="text" placeholder="UserName" name="Name">
-        <button @onclick="GetSubmit" class="standard-btn">Получить пользователя</button>
-        <p><span class="message">User message:</span> @getUserMessage</p>
+    <div class="forms">
+        <EditForm class="form__container" Model="@newUser" OnSubmit="@AddSubmit">
+            <h2>Добавление пользователя</h2>
+            <label for="name">Имя</label>
+            <input class="form-control" @bind-value="@newUser.UserName" id="name" type="text" placeholder="Имя" name="Name">
+            <button class="btn-secondary">Добавить</button>
+            <p>@newMessage</p>
+        </EditForm>
+        
+        <div class="form__container" Model="@delUser" OnSubmit="@AddSubmit">
+            <h2>Удаление пользователя</h2>
+            <label for="name">Никнейм</label>
+            <input class="form-control" @bind-value="@delUser" id="name" type="text" placeholder="Имя" name="Name">
+            <button class="btn-secondary">Добавить</button>
+            <p>@delUserMessage</p>
+        </div>
     </div>
-
-    <p>@Data</p>
-    
-    <a href="/test">Test</a>
-
+    <button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
 </main>
 
 @* добавление пользоватя *@
 @code {
     AddUser newUser = new();
     string? newMessage;
+    string? delUserMessage;
+    string? delUser;
 
     async Task AddSubmit()
     {
         newMessage = "Отправка данных";
         newUser.ChatroomId = chatId;
-        var response = await MakeAuthorizedPost("http://localhost:1977/chat/user", newUser);
-        newMessage = response.IsSuccessStatusCode ? "Пользователь добавлен" : "Удивительно, похоже ты допустил ошибку или ввел существующий логин. Невероятная удача!!!";
+        var response = await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/user", newUser);
+        newMessage = response.IsSuccessStatusCode ? "Пользователь добавлен" : "Пользователя не существует";
     }
-}
-
-@* получение пользоватя *@
-@code {
-    String inputUserName = "";
-    string? getUserMessage;
-UserModel _userModel;
-
-    async Task GetSubmit()
+    
+    async Task DeleteChat()
     {
-        if (inputUserName == "")
-        {
-            getUserMessage = "Мы юзерфрендли";
-            return;
-        }
-        getUserMessage = "Получение данных";
-        var response = await MakeAuthorizedGet("http://localhost:1977/user/" + inputUserName);
+        var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/" + chatId);
         if (response.IsSuccessStatusCode)
-        {
-            _userModel = await response.Content.ReadFromJsonAsync<UserModel>();
-        }
-        else
-        {
-            getUserMessage = "Не знаю такого!";
-        }
+            NavigationManager.NavigateTo("/");
     }
-
+    
+    async Task DeleteUser()
+    {
+        delUserMessage = "Отправка данных";
+        var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user/" + delUser);
+        delUserMessage = response.IsSuccessStatusCode ? "Пользователь удален" : "Пользователя не существует";
+    }
 }
 
 @code {
     public HubConnection? hubConnection;
     public string Data;
-    public List<ChatroomModel> allChats;
 
     protected override async Task OnInitializedAsync()
     {
-        await FetchAllChats();
-        
         hubConnection = new HubConnectionBuilder()
             .WithUrl("http://localhost:1977/chathub")
             .Build();
@@ -145,25 +112,21 @@ UserModel _userModel;
 
         await hubConnection.StartAsync();
     }
-
-    async Task FetchAllChats()
-    {
-        var response = await MakeAuthorizedGet("http://localhost:1977/chat/all");
-        if (response.IsSuccessStatusCode)
-            allChats = await response.Content.ReadFromJsonAsync<List<ChatroomModel>>();
-    }
 }
 
 @*получение сообщений*@
 @code
 {
     List<ChatMessageModel>? allMessages;
-    int chatId;
-    
+
     async Task OnChatClick(int id)
     {
-        chatId = id;
-        var response = await MakeAuthorizedGet("http://localhost:1977/chat/messages/" + id);
+        NavigationManager.NavigateTo(id.ToString());
+    }
+    
+    async Task FetchMessages()
+    {
+        var response = await AuthRequestService.MakeAuthorizedGet("http://localhost:1977/chat/messages/" + chatId);
         if (response.IsSuccessStatusCode)
             allMessages = await response.Content.ReadFromJsonAsync<List<ChatMessageModel>?>();
     }
@@ -176,79 +139,22 @@ UserModel _userModel;
     async Task createMessage()
     {
         message.ChatId = chatId;
-        Data = await (await MakeAuthorizedPost("http://localhost:1977/chat/message", message)).Content.ReadAsStringAsync();
+        Data = await (await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/message", message)).Content.ReadAsStringAsync();
     }
 }
 
-@*Добавление чата*@
+
 @code
 {
-    CreateChatroom chatroom = new();
-    async Task createChatroom()
+    public int chatId;
+    [Parameter]
+    public string PageId{ get; set; }
+
+    async protected override Task OnParametersSetAsync()
     {
-        List<string> addedUsers = new List<string> { };
-        chatroom.UserNames = addedUsers;
-        
-        string url = "http://localhost:1977/chat";
-
-        var response = await MakeAuthorizedPost("http://localhost:1977/chat", chatroom);
-        if (response.IsSuccessStatusCode)
-            await FetchAllChats();
+        chatId = Int32.Parse(PageId);
+        await FetchMessages();
+        await base.OnParametersSetAsync();
     }
-}
 
-@code {
-    async Task<R> MakeAuthorizedPost<T, R>(string url, T data)
-    {
-        var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
-        var cookies = new CookieContainer();
-        foreach (var cook in httpContextAccessor.HttpContext.Request.Cookies)
-            cookies.Add(new Uri(url), new Cookie(cook.Key, cook.Value));
-        if (httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Antiforgery.64q6qL_ya2I") &&
-            httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Identity.Application"))
-        {
-            request.Headers.Add("Cookie", cookies.GetCookieHeader(new Uri(url)));
-            var response = await HttpClient.SendAsync(request);
-            return await response.Content.ReadFromJsonAsync<R>();
-        }
-
-        throw new Exception("Not authorized!");
-    }
-    
-    async Task<HttpResponseMessage?> MakeAuthorizedPost<T>(string url, T data)
-    {
-        var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
-        var cookies = new CookieContainer();
-        foreach (var cook in httpContextAccessor.HttpContext.Request.Cookies)
-            cookies.Add(new Uri(url), new Cookie(cook.Key, cook.Value));
-        if (httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Antiforgery.64q6qL_ya2I") &&
-            httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Identity.Application"))
-        {
-            request.Headers.Add("Cookie", cookies.GetCookieHeader(new Uri(url)));
-            var response = await HttpClient.SendAsync(request);
-            return response;
-        }
-
-        throw new Exception("Not authorized!");
-    }
-    
-    async Task<HttpResponseMessage?> MakeAuthorizedGet(string url)
-    {
-        var request = new HttpRequestMessage(HttpMethod.Get, url);
-        var cookies = new CookieContainer();
-        foreach (var cook in httpContextAccessor.HttpContext.Request.Cookies)
-            cookies.Add(new Uri(url), new Cookie(cook.Key, cook.Value));
-        
-        if (httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Antiforgery.64q6qL_ya2I") &&
-            httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Identity.Application"))
-        {
-            request.Headers.Add("Cookie", cookies.GetCookieHeader(new Uri(url)));
-            var response = await HttpClient.SendAsync(request);
-            return response;
-        }
-
-        throw new Exception("Not authorized!");
-    }
 }

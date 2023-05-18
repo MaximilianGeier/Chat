@@ -71,6 +71,7 @@ public class ChatController : Controller
     }
 
     [HttpPatch("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> UpdateAsync([FromBody] CreateChatroom request, [FromRoute] int id)
     {
         var chatroom = await _context.Chatrooms.FirstOrDefaultAsync(x => x.Id == id);
@@ -85,7 +86,8 @@ public class ChatController : Controller
     }
     
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
+    [Authorize]
+    public async Task<IActionResult> DeleteAsync([FromRoute] int id)
     {
         var chatroom = await _context.Chatrooms.FirstOrDefaultAsync(x => x.Id == id);
         if (chatroom is null)
@@ -99,6 +101,7 @@ public class ChatController : Controller
     }
     
     [HttpGet("{id:int}/users")]
+    [Authorize]
     public async Task<IActionResult> GetUsersAsync([FromRoute] int id)
     {
         var users = await _context.Users
@@ -112,6 +115,7 @@ public class ChatController : Controller
     }
 
     [HttpPost("user")]
+    [Authorize]
     public async Task<IActionResult> AddUserAsync([FromBody] AddUser request)
     {
         var user = await _context.Users
@@ -132,6 +136,7 @@ public class ChatController : Controller
     }
     
     [HttpGet("messages/{id:int}")]
+    [Authorize]
     public async Task<IActionResult> GetMessagesAsync([FromRoute] int id)
     {
         var chatroom = _context.Chatrooms.FirstOrDefault(chatroom => chatroom.Id == id);
@@ -158,5 +163,27 @@ public class ChatController : Controller
         if (chatrooms.Count == 0)
             return NotFound();
         return Ok(chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)));
+    }
+    
+    [HttpDelete("user")]
+    [Authorize]
+    public async Task<IActionResult> DeleteUserAsync([FromBody] DeleteUserFromChat request)
+    {
+        var chatroom = await _context.Chatrooms.FirstOrDefaultAsync(chatroom => chatroom.Id == request.ChatId);
+        if (chatroom == null)
+            return NotFound("Chatroom not found!");
+
+        var user = await _context.Users.FirstOrDefaultAsync(user => user.UserName == request.UserName);
+        if (user == null)
+            return NotFound("Chatroom not found!");
+
+        if (!chatroom.Users.Any(user => user.UserName == User.Identity.Name))
+            return Forbid();
+
+        chatroom.Users.Remove(user);
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }
