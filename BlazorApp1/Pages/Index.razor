@@ -20,42 +20,51 @@
 @inject AuthRequestService AuthRequestService
 @inject NavigationManager NavigationManager
 
-<main class="container d-flex flex-column gap-4 main mb-5 mt-5">
-    <div class="chat-container">
-        @if (allMessages is not null)
+<div class="chat-container">
+    @if (allMessages is not null)
+    {
+        @foreach (var item in allMessages)
         {
-            @foreach (var item in allMessages)
-            {
-                <p class="msg send">
-                    <span class="font-weight-bold">@item.UserName:</span> @item.Text
-                </p>
-            }
+            <p class="msg send">
+                <span class="font-weight-bold">@item.UserName:</span> @item.Text
+            </p>
         }
-    </div>
-        <EditForm class="form--send-msg" Model="message" OnSubmit="@createMessage">
-            <input class="form-control" @bind-value="@message.Text"/>
-            <button class="btn-secondary" type="submit">Send</button>
-        </EditForm>
+    }
+</div>
+    <EditForm class="form__send-msg" Model="message" OnSubmit="@createMessage">
+        <input class="form-control" @bind-value="@message.Text"/>
+        <button class="btn-secondary" type="submit">Послать это</button>
+    </EditForm>
 
-    <div class="forms">
-        <EditForm class="form__container" Model="@newUser" OnSubmit="@AddSubmit">
-            <h2>Добавление пользователя</h2>
-            <label for="name">Имя</label>
-            <input class="form-control" @bind-value="@newUser.UserName" id="name" type="text" placeholder="Имя" name="Name">
-            <button class="btn-secondary">Добавить</button>
-            <p>@newMessage</p>
-        </EditForm>
-        
-        <EditForm class="form__container" Model="@deleteUserFromChat" OnSubmit="@DeleteUserFromChat">
-            <h2>Удаление пользователя</h2>
-            <label for="name">Никнейм</label>
-            <input class="form-control" @bind-value="@deleteUserFromChat.UserName" id="name" type="text" placeholder="Имя" name="Name">
-            <button class="btn-secondary" type="submit">Удалить</button>
-            <p>@delUserMessage</p>
-        </EditForm>
-    </div>
-    <button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
-</main>
+<div class="forms">
+    <EditForm class="form__container" Model="@newUser" OnSubmit="@AddSubmit">
+        <h2>Добавление пользователя</h2>
+        <label for="name">Имя</label>
+        <input class="form-control" @bind-value="@newUser.UserName" id="name" type="text" placeholder="Имя" name="Name">
+        <button class="btn-secondary">Добавить</button>
+        <p>@newMessage</p>
+    </EditForm>
+    
+    <EditForm class="form__container" Model="@renamedChatroom" OnSubmit="@RenameChat">
+        <h2>Переименовать чат🍕</h2>
+        <label for="name">Новое название</label>
+        <input class="form-control" @bind-value="@renamedChatroom.Title" id="name" type="text" placeholder="Новое название" name="Name">
+        <button type="submit" class="btn-secondary">Изменить</button>
+    </EditForm>
+</div>
+<div>
+    <ul>
+        @foreach (var user in chatUsers)
+        {
+            <li>
+                @user.UserName
+                <button @onclick="() => DeleteUserFromChat(user.UserName)"> x</button>
+            </li>
+        }
+    </ul>
+    <p>@delUserMessage</p>
+</div>
+<button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
 
 @* добавление пользоватя *@
 @code {
@@ -105,6 +114,7 @@
 
         hubConnection.On<ChatMessageModel>("ReceiveNewMessage", (data) =>
         {
+            Console.WriteLine("<><><><><><><><><><><><><><><><><><><><><>", data);
             if (data != null) allMessages?.Add(data);
             InvokeAsync(StateHasChanged);
 
@@ -143,6 +153,18 @@
     }
 }
 
+@*Отправка сообщения*@
+@code
+{
+    List<UserModel> chatUsers = new();
+    async Task getChatUsers(int id)
+    {
+        var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/chat/{id}/users");
+        if (response.IsSuccessStatusCode)
+            chatUsers = await response.Content.ReadFromJsonAsync<List<UserModel>?>();
+    }
+}
+
 
 @code
 {
@@ -155,6 +177,7 @@
         chatId = Int32.Parse(PageId);
         await FetchMessages();
         await base.OnParametersSetAsync();
+        await getChatUsers(chatId);
     }
 }
 
@@ -163,12 +186,21 @@
 
     DeleteUserFromChat deleteUserFromChat = new();
     
-    async Task DeleteUserFromChat()
+    async Task DeleteUserFromChat(string userName)
     {
-        delUserMessage = "Удаляёю";
+        deleteUserFromChat.UserName = userName;
+        delUserMessage = "Удаляю";
         deleteUserFromChat.ChatId = chatId;
         var request = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user", deleteUserFromChat);
-        delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + (await request.Content.ReadAsStringAsync());
+        delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + deleteUserFromChat.UserName + (await request.Content.ReadAsStringAsync());
     }
 
+    
+    CreateChatroom renamedChatroom = new();
+    
+    async Task RenameChat()
+    {
+        renamedChatroom.UserNames = chatUsers.Select(user => user.UserName);
+        var request = await AuthRequestService.MakeAuthorizedPatch($"http://localhost:1977/chat/{chatId}", renamedChatroom);
+    }
 }

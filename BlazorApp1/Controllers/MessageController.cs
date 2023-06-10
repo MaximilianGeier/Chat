@@ -66,8 +66,7 @@ public class MessageController : Controller
         _context.Add(message);
         var c = await _context.SaveChangesAsync();
         ChatMessageModel chatMessageModel = _mapper.Map<ChatMessageModel>(message);
-
-        var serializeMsg = JsonSerializer.Serialize(chatMessageModel);
+        
         await _hub.Clients.Groups("group1").SendAsync("ReceiveNewMessage", chatMessageModel);
 
         return Ok();

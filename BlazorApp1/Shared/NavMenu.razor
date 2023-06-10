@@ -7,11 +7,12 @@
 @using BlazorApp1.Models
 @using BlazorApp1.Requests
 @using Chat.Services
+@using Microsoft.AspNetCore.SignalR.Client
 @inject AuthRequestService AuthRequestService
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Chack Chat</a>
+        <a class="navbar-brand" href="">Chuck Chat</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -55,6 +56,9 @@
 @*Добавление чата*@
 @code
 {
+    public HubConnection? hubConnection;
+    public string Data;
+    
     public List<ChatroomModel> allChats;
     CreateChatroom chatroom = new();
     async Task createChatroom()
@@ -79,5 +83,17 @@
     protected override async Task OnInitializedAsync()
     {
         await FetchAllChats();
+        
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:1977/chathub")
+            .Build();
+
+        hubConnection.On<List<ChatroomModel>>("ReceiveChatrooms", (data) =>
+        {
+            if (data != null) allChats = data;
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
     }
 }

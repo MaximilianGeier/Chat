@@ -1,12 +1,15 @@
 using System.Security.Claims;
+using System.Text.Json;
 using AutoMapper;
 using BlazorApp1.Data;
 using BlazorApp1.Models;
 using BlazorApp1.Entities;
+using BlazorApp1.Hubs;
 using BlazorApp1.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlazorApp1.Controllers;
@@ -18,12 +21,15 @@ public class ChatController : Controller
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMapper _mapper;
+    private readonly IHubContext<ChatHub> _hub;
 
-    public ChatController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
+    public ChatController(ApplicationDbContext context, UserManager<ApplicationUser> userManager,
+        IMapper mapper, IHubContext<ChatHub> hub)
     {
         _context = context;
         _userManager = userManager;
         _mapper = mapper;
+        _hub = hub;
     }
 
     [HttpGet("{id:int}")]
@@ -82,6 +88,15 @@ public class ChatController : Controller
 
         await _context.SaveChangesAsync();
 
+        var chatrooms = await _context.Chatrooms
+            .Include(x => x.Users)
+            .Where(x => !x.IsDeleted && x.Users.Any(u => u.UserName == User.Identity.Name))
+            .ToListAsync();
+        List<ChatroomModel> chatroomsModels = 
+            chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)).ToList();
+
+        await _hub.Clients.Groups("group1").SendAsync("ReceiveChatrooms", chatroomsModels);
+        
         return Ok();
     }
     
@@ -109,9 +124,7 @@ public class ChatController : Controller
         if (users.Count == 0)
             return NotFound();
 
-        var usersDto = new UserModel[users.Count()];
-
-        return Ok(users);
+        return Ok(_mapper.Map<List<UserModel>>(users));
     }
 
     [HttpPost("user")]
