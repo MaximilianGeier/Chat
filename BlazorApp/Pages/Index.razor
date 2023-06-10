@@ -22,7 +22,7 @@
         {
             @foreach (var item in allMessages)
             {
-                <p class="msg send">
+                <p class="msg send" @oncontextmenu="HandleRightClick" @oncontextmenu:preventDefault="true">
                     @item.UserName: @item.Text
                 </p>
             }
@@ -109,6 +109,12 @@ UserModel _userModel;
         }
     }
 
+    
+    void HandleRightClick(MouseEventArgs args)
+    {
+        if (args.Button == 2)
+            Console.WriteLine("This is a right click");
+    }
 }
 
 @code {
