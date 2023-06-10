@@ -49,7 +49,7 @@ public class AuthRequestService
 
         throw new Exception("Not authorized!");
     }
-    
+
     public async Task<HttpResponseMessage?> MakeAuthorizedGet(string url)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -83,6 +83,22 @@ public class AuthRequestService
     public async Task<HttpResponseMessage?> MakeAuthorizedDelete<T>(string url, T data)
     {
         var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        request.Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
+        AddAuthCookiesToRequest(request, url);
+        
+        if (_httpContextAccessor.HttpContext.Request.Cookies.Select(pair => pair.Key).Any(key => key.Contains(".AspNetCore.Antiforgery")) &&
+            _httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(".AspNetCore.Identity.Application"))
+        {
+            var response = await _httpClient.SendAsync(request);
+            return response;
+        }
+
+        throw new Exception("Not authorized!");
+    }
+    
+    public async Task<HttpResponseMessage?> MakeAuthorizedPatch<T>(string url, T data)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Patch, url);
         request.Content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
         AddAuthCookiesToRequest(request, url);
         
