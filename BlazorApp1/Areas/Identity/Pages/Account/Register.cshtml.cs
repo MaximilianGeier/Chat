@@ -40,7 +40,6 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
         {
             _userManager = userManager;
             _userStore = userStore;
-            _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
@@ -50,21 +49,20 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
         public InputModel Input { get; set; }
         
         public string ReturnUrl { get; set; }
-        
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
-        
+
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
+            [StringLength(30, ErrorMessage = "Имя должно быть длиной от {2} до {1} символов", MinimumLength = 4)]
             [Display(Name = "Имя")]
             public string UserName { get; set; }
             
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [EmailAddress]
             [Display(Name = "Почта")]
             public string Email { get; set; }
             
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [StringLength(100, ErrorMessage = "Пароль должен быть длиной от {2} до {1} символов", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Пароль")]
@@ -79,13 +77,24 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            bool isEmailUnique = await _userManager.FindByEmailAsync(Input.Email) == null;
+            if (!isEmailUnique)
+            {
+                ModelState.AddModelError(string.Empty, "Почта уже занята!");
+                return Page();
+            }
+            
+            bool isNameUnique = await _userManager.FindByNameAsync(Input.UserName) == null;
+            if (!isNameUnique)
+            {
+                ModelState.AddModelError(string.Empty, "Имя уже занято!");
+                return Page();
+            }
+            
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
@@ -117,7 +126,7 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
                 }
             }
 
-            return Page(); // If we got this far, something failed, redisplay form
+            return Page();
         }
 
         private ApplicationUser CreateUser()
@@ -132,15 +141,6 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
                     $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
                     $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
             }
-        }
-
-        private IUserEmailStore<ApplicationUser> GetEmailStore()
-        {
-            if (!_userManager.SupportsUserEmail)
-            {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
-            }
-            return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }
 }
