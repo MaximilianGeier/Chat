@@ -6,6 +6,8 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using BlazorApp1.Entities;
+using Chat.Services;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,14 +19,17 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly AuthRequestService _authRequestService;
 
         public DeletePersonalDataModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            ILogger<DeletePersonalDataModel> logger)
+            ILogger<DeletePersonalDataModel> logger,
+            AuthRequestService authRequestService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _authRequestService = authRequestService;
         }
         
         [BindProperty]
@@ -32,7 +37,7 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
         
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [DataType(DataType.Password)]
             [Display(Name = "Пароль")]
             public string Password { get; set; }
@@ -69,11 +74,10 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
                     return Page();
                 }
             }
-
-            user.IsDeleted = true;
             
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded)
+            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}{HttpContext.Request.PathBase.ToUriComponent()}";
+            var result = await _authRequestService.MakeAuthorizedDelete(baseUrl+"/user/" + user.UserName);
+            if (!result.IsSuccessStatusCode)
             {
                 throw new InvalidOperationException($"Произошла непредвиденная ошибка.");
             }

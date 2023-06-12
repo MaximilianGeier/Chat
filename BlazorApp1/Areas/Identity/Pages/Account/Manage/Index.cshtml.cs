@@ -7,6 +7,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BlazorApp1.Entities;
+using BlazorApp1.Requests;
+using Chat.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,13 +19,16 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly AuthRequestService _authRequestService;
 
         public IndexModel(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            AuthRequestService authRequestService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _authRequestService = authRequestService;
         }
         
         [TempData]
@@ -86,12 +91,14 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
                 var sameNameUser = _userManager.FindByNameAsync(Input.NewUserName).Result;
                 if (sameNameUser != null)
                 {
-                    StatusMessage = "Имя зането!";
+                    StatusMessage = "Имя занято!";
                     return RedirectToPage();
                 }
                 
-                var request = await _userManager.SetUserNameAsync(user, Input.NewUserName);
-                if (!request.Succeeded)
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}{HttpContext.Request.PathBase.ToUriComponent()}";
+                var request = await _authRequestService.MakeAuthorizedPatch(baseUrl + "/user/" + user.UserName,
+                    new UpdateUser() { NewName = Input.NewUserName });//_userManager.SetUserNameAsync(user, Input.NewUserName);
+                if (!request.IsSuccessStatusCode)
                 {
                     StatusMessage = "Что-то пошло не так.";
                     return RedirectToPage();

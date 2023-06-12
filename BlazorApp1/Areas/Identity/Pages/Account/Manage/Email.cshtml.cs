@@ -41,12 +41,12 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
         
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [EmailAddress]
             [Display(Name = "Новая почта")]
             public string NewEmail { get; set; }
             
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [DataType(DataType.Password)]
             [Display(Name = "Пароль")]
             public string Password { get; set; }
