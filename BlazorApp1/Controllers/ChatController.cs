@@ -37,13 +37,15 @@ public class ChatController : Controller
     public async Task<IActionResult> GetAsync([FromRoute] int id)
     {
         var chatroom = await _context.Chatrooms
-            .Include(x => x.Users.Where(y => !y.IsDeleted))
-            .Include(x => x.Messages.Where(y => !y.IsDeleted))
+            .Include(x => x.Users.Where(u => !u.IsDeleted))
+            .Include(x => x.Messages.Where(m => !m.IsDeleted))
+            .Include(c => c.Admins.Where(a => !a.IsDeleted))
             .FirstOrDefaultAsync(c => c.Id == id);
         if (chatroom is null || chatroom.IsDeleted)
             return NotFound();
-        if (chatroom.IsDeleted)
-            return NotFound();
+
+        if (!chatroom.Admins.Any(u => User.Identity.Name == u.UserName))
+            return BadRequest();
 
         return Ok(_mapper.Map<ChatroomModel>(chatroom));
     }
@@ -86,13 +88,15 @@ public class ChatController : Controller
     {
         var chatroom = await _context.Chatrooms
             .Include(c => c.Users)
+            .Include(c => c.Admins)
+
             .FirstOrDefaultAsync(x => x.Id == id);
         
         if (chatroom is null || chatroom.IsDeleted)
             return NotFound();
         
         if (!chatroom.Admins.Any(admin => User.Identity.Name == admin.UserName))
-            return Forbid();
+            return BadRequest();
 
         chatroom.Title = request.Title;
 
@@ -116,13 +120,14 @@ public class ChatController : Controller
     {
         var chatroom = await _context.Chatrooms
             .Include(c => c.Users)
+            .Include(c => c.Admins)
             .FirstOrDefaultAsync(c => c.Id == id);
         
         if (chatroom is null || chatroom.IsDeleted)
             return NotFound();
 
         if (!chatroom.Admins.Any(admin => User.Identity.Name == admin.UserName))
-            return Forbid();
+            return BadRequest();
         
         chatroom.IsDeleted = true;
 
@@ -152,7 +157,7 @@ public class ChatController : Controller
             return NotFound();
 
         if (!chatroom.Users.Any(user => user.UserName == User.Identity.Name))
-            return Forbid();
+            return BadRequest();
 
         var users = chatroom.Users.Where(u => !u.IsDeleted);
 
@@ -174,7 +179,7 @@ public class ChatController : Controller
             return NotFound();
         
         if (!chatroom.Users.Any(u => u.UserName == User.Identity.Name))
-            return Forbid();
+            return BadRequest();
 
         if (chatroom.Users.Contains(user))
             return Conflict();
@@ -191,9 +196,15 @@ public class ChatController : Controller
     [Authorize]
     public async Task<IActionResult> GetMessagesAsync([FromRoute] int id)
     {
-        var chatroom = _context.Chatrooms.FirstOrDefault(chatroom => chatroom.Id == id);
+        var chatroom = _context.Chatrooms
+            .Include(c => c.Users)
+            .FirstOrDefault(chatroom => chatroom.Id == id);
+        
         if (chatroom is null || chatroom.IsDeleted)
             return NotFound();
+
+        if (!chatroom.Users.Any(u => u.UserName == User.Identity.Name))
+            return BadRequest();
 
         var messages = await  _context.ChatMessages
             .Include(x => x.ApplicationUser)
@@ -207,8 +218,8 @@ public class ChatController : Controller
     public async Task<IActionResult> GetAllAsync()
     {
         var chatrooms = await _context.Chatrooms
-            .Include(x => x.Users)
-            .Where(x => !x.IsDeleted && x.Users.Any(u => u.UserName == User.Identity.Name))
+            .Include(c => c.Users)
+            .Where(c => !c.IsDeleted && c.Users.Any(u => u.UserName == User.Identity.Name))
             .ToListAsync();
         if (chatrooms.Count == 0)
             return NotFound();
@@ -220,13 +231,16 @@ public class ChatController : Controller
     public async Task<IActionResult> DeleteUserAsync([FromBody] DeleteUserFromChat request)
     {
         var chatroom = await _context.Chatrooms
-            .Include(ct => ct.Users)
+            .Include(c => c.Users)
+            .Include(c => c.Admins)
             .FirstOrDefaultAsync(chatroom => chatroom.Id == request.ChatId);
         if (chatroom == null || chatroom.IsDeleted)
             return NotFound("Чат не найден!");
-
-        var user = chatroom.Users
-            .FirstOrDefault(user => user.UserName == request.UserName);
+        
+        if (!chatroom.Admins.Any(admin => User.Identity.Name == admin.UserName))
+            return BadRequest();
+        
+        var user = chatroom.Users.FirstOrDefault(user => user.UserName == request.UserName);
         if (user == null)
             return NotFound("Пользователь не найден!");
         
@@ -237,6 +251,15 @@ public class ChatController : Controller
         user.Chatrooms.Remove(chatroom);
 
         await _context.SaveChangesAsync();
+        
+        var chatrooms = await _context.Chatrooms
+            .Include(x => x.Users)
+            .Where(x => !x.IsDeleted && x.Users.Any(u => u.UserName == User.Identity.Name))
+            .ToListAsync();
+        List<ChatroomModel> chatroomsModels = 
+            chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)).ToList();
+
+        await _hub.Clients.Groups("group1").SendAsync("ReceiveChatrooms", chatroomsModels);
 
         return Ok();
     }

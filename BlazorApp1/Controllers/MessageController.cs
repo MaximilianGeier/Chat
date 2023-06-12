@@ -34,12 +34,15 @@ public class MessageController : Controller
     public async Task<IActionResult> GetAsync([FromRoute] long id)
     {
         var message = await _context.ChatMessages
-            .Include(x => x.ApplicationUser)
-            .FirstOrDefaultAsync(x => x.Id == id);
-        if (message is null)
+            .Include(m => m.ApplicationUser)
+            .Include(m => m.Chatroom)
+            .Include(m => m.Chatroom.Users)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (message is null || message.IsDeleted)
             return NotFound();
-        if (message.IsDeleted)
-            return NotFound();
+
+        if (!message.Chatroom.Users.Any(u => u.UserName == User.Identity.Name))
+            return BadRequest();
 
         return Ok(_mapper.Map<ChatMessageModel>(message));
     }
@@ -51,9 +54,15 @@ public class MessageController : Controller
         var user = await _context.Users.FirstOrDefaultAsync(user => User.Identity.Name == user.UserName);
         if (user is null)
             return NotFound("Authorized user not found");
-        var chat = await _context.Chatrooms.FirstOrDefaultAsync(x => request.ChatId == x.Id);
+        
+        var chat = await _context.Chatrooms
+            .Include(c => c.Users)
+            .FirstOrDefaultAsync(x => request.ChatId == x.Id);
         if (chat is null)
             return NotFound("Chatroom not found");
+
+        if (!chat.Users.Any(u => u.UserName == user.UserName))
+            return BadRequest();
         
         var message = new ChatMessage()
         {
@@ -76,10 +85,15 @@ public class MessageController : Controller
     [Authorize]
     public async Task<IActionResult> UpdateAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
-        var message = await _context.ChatMessages.FirstOrDefaultAsync(x => x.Id == id);
+        var message = await _context.ChatMessages
+            .Include(m => m.ApplicationUser)
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (message is null)
             return NotFound();
 
+        if (message.ApplicationUser.UserName != User.Identity.Name)
+            return BadRequest();
+        
         message.Text = request.Text;
         message.IsUpdated = true;
         message.UpdateTime = DateTime.Now;
@@ -93,9 +107,14 @@ public class MessageController : Controller
     [Authorize]
     public async Task<IActionResult> DeleteAsync([FromBody] UpdateMessage request, [FromRoute] int id)
     {
-        var message = await _context.ChatMessages.FirstOrDefaultAsync(x => x.Id == id);
+        var message = await _context.ChatMessages
+            .Include(m => m.ApplicationUser)
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (message is null)
             return NotFound();
+        
+        if (message.ApplicationUser.UserName != User.Identity.Name)
+            return BadRequest();
 
         message.IsDeleted = true;
 
