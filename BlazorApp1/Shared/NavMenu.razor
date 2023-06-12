@@ -36,7 +36,7 @@
     <div class="chat__add">
         <EditForm Model="chatroom" OnSubmit="@createChatroom">
             <div class="chat__add-elements">
-                <input class="form-control" placeholder="Добавить чат" @bind-value="@chatroom.Title"/>
+                <input class="form-control" placeholder="Добавить чат" maxlength="26" @bind-value="@chatroom.Title"/>
                 <button class="btn-plus" type="submit">
                     <img src="plus.png" alt="+">
                 </button>

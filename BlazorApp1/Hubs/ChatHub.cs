@@ -17,7 +17,6 @@ public class ChatHub : Hub
         
         Thread.Sleep(2000);
         await Clients.All.SendAsync("ReceiveMessage", "Recived date");
-        Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
     }
 
     public static string GetData()

@@ -26,7 +26,7 @@
     {
         @foreach (var item in allMessages)
         {
-            <p class="msg send">
+            <p class="msg @(authUser.UserName == item.UserName ? "send" : "receive")">
                 <span class="msg__username">@item.UserName:</span> @item.Text
             </p>
         }
@@ -73,7 +73,7 @@
     <button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
 </div>
 
-@if (currentChatroom?.Admins.Any(a => a.UserName == authUser.UserName) ?? false)
+@if (authUser != null && (currentChatroom?.Admins.Any(a => a.UserName == authUser.UserName) ?? false))
 {
     <button onclick="@ChangeSettingsVisability" class="btn__standart btn__settings">Настроить тут все</button>
 }
@@ -103,6 +103,7 @@
         newUser.ChatroomId = chatId;
         var response = await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/user", newUser);
         newMessage = response.IsSuccessStatusCode ? "Пользователь добавлен" : "Пользователя не существует";
+        await getChatUsers(chatId);
     }
     
     async Task DeleteChat()
@@ -220,6 +221,7 @@
         delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + deleteUserFromChat.UserName + (await request.Content.ReadAsStringAsync());
         if(userName == authUser.UserName)
             NavigationManager.NavigateTo("/");
+        await getChatUsers(chatId);
     }
 
     
