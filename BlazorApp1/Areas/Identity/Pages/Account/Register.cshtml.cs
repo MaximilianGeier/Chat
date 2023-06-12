@@ -84,10 +84,22 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                bool isEmailUnique = await _userManager.FindByEmailAsync(Input.Email) == null;
+                if (!isEmailUnique)
+                {
+                    ModelState.AddModelError(string.Empty, "Почта уже занята!");
+                    return Page();
+                }
+            
+                bool isNameUnique = await _userManager.FindByNameAsync(Input.UserName) == null;
+                if (!isNameUnique)
+                {
+                    ModelState.AddModelError(string.Empty, "Имя уже занято!");
+                    return Page();
+                }
+                
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
@@ -100,16 +112,6 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
                     await _userManager.ConfirmEmailAsync(user, code);
                     await _signInManager.PasswordSignInAsync(user, Input.Password, false, false);
                     return Redirect("/");
-                    /*
-                     var userId = await _userManager.GetUserIdAsync(user);
-                     var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
-
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");*/
                 }
                 foreach (var error in result.Errors)
                 {
@@ -133,7 +135,7 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
                     $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
             }
         }
-
+        
         private IUserEmailStore<ApplicationUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)

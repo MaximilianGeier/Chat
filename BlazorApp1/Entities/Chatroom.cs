@@ -9,6 +9,7 @@ public class Chatroom
     [Required]
     public string Title { get; set; }
     public ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+    public ICollection<ApplicationUser> Admins { get; set; } = new List<ApplicationUser>();
     public ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
     [DefaultValue(false)]
     public bool IsDeleted { get; set; }
