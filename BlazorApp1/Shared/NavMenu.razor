@@ -27,16 +27,20 @@
             {
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="@item.Id">
-                        <span class="oi oi-list-rich" aria-hidden="true"></span> @item.Title
+                        <span aria-hidden="true"></span> @item.Title
                     </NavLink>
                 </div>
             }
         }
     </nav>
-    <div class="nav-item px-3">
+    <div class="chat__add">
         <EditForm Model="chatroom" OnSubmit="@createChatroom">
-            <input class="form-control" placeholder="Название чата" aria-placeholder="Добавить чат" @bind-value="@chatroom.Title"/>
-            <button class="btn btn-primary mt-3" type="submit">Добавить чат</button>
+            <div class="chat__add-elements">
+                <input class="form-control" placeholder="Добавить чат" @bind-value="@chatroom.Title"/>
+                <button class="btn-plus" type="submit">
+                    <img src="plus.png" alt="+">
+                </button>
+            </div>
         </EditForm>
     </div>
 </div>

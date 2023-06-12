@@ -1,22 +1,25 @@
-.navbar-toggler {
-    background-color: red;
-}
-
 .top-row {
     height: 3.5rem;
-    background-image: url("chack.png");
-    background-size: 100%;
+    background-color: #5D7791;
 }
 
-.navbar-brand {
-    font-size: 1.1rem;
+.btn-plus{
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
 }
 
-.oi {
-    width: 2rem;
-    font-size: 1.1rem;
-    vertical-align: text-top;
-    top: -2px;
+.navbar-brand{
+    font-size: 1.8rem;
+    font-family: 'Mr Dafoe', cursive;
+    color: rgba(254, 132, 39, 1);
+    text-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25) inset;
+    line-height: 56px;
+}
+
+.chat__add{
+    position: relative;
+    margin-top: 20px;
 }
 
 .nav-item {
@@ -66,4 +69,15 @@
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
     }
+}
+
+@media (min-width: 641px) {
+    .form-control{
+        width: 180px;
+    }
+}
+
+.chat__add-elements{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
 }

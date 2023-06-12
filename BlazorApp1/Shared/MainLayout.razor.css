@@ -4,34 +4,32 @@
     flex-direction: column;
 }
 
+.header{
+    background-color: #5D7791;
+}
+
 main {
     flex: 1;
     padding: 0;
     margin: 0;
+    background: #1a1a1a url("bg.jpg") repeat left top;
+    background-size: 5em 5em;
+    color: #7EA1C4;
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, #ceb4ac 0%, #3c3c34 70%);
+    background: url("side bar bg.jpg") no-repeat;
+    background-size: 100%;
 }
 
 .top-row {
-    background-color: #f7f7f7;
+    background-color: #5D7791;
     border-bottom: 1px solid #d6d5d5;
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
     align-items: center;
 }
-
-    .top-row ::deep a, .top-row .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-    }
-
-    .top-row a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
 
 @media (max-width: 640.98px) {
     .top-row:not(.auth) {

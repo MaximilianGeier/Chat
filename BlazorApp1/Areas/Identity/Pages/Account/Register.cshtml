@@ -1,6 +1,4 @@
 ﻿@page
-@using Chat.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model RegisterModel
 @{
     ViewData["Title"] = "Регистрация";
@@ -38,3 +36,7 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

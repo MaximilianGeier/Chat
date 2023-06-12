@@ -40,11 +40,11 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
         
         public class InputModel
         {
-            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
+            [Required]
             [Display(Name = "Почта или имя")]
             public string Login { get; set; }
             
-            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
+            [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; }
             
@@ -74,27 +74,29 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(Input.Login);
-                if (user == null)
-                    user = await _userManager.FindByNameAsync(Input.Login);
-
-                if (user == null || user.IsDeleted)
-                {
-                    ModelState.AddModelError(string.Empty, "Данный логин не существует! (логин это ваше имя или почта)");
-                    return Page();
-                }
-
-                var result = await _signInManager.PasswordSignInAsync(user.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                string userName = user == null ? Input.Login : user.UserName;
+                
+                var result = await _signInManager.PasswordSignInAsync(userName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     return LocalRedirect(returnUrl);
                 }
+                if (result.RequiresTwoFactor)
+                {
+                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
+                }
+                if (result.IsLockedOut)
+                {
+                    return RedirectToPage("./Lockout");
+                }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Неудачная попытка авторизации! (проверье введённый пароль)");
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return Page();
                 }
             }
-            
+
+            // If we got this far, something failed, redisplay form
             return Page();
         }
     }

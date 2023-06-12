@@ -111,6 +111,15 @@ public class ChatController : Controller
         chatroom.IsDeleted = true;
 
         await _context.SaveChangesAsync();
+        
+        var chatrooms = await _context.Chatrooms
+            .Include(x => x.Users)
+            .Where(x => !x.IsDeleted && x.Users.Any(u => u.UserName == User.Identity.Name))
+            .ToListAsync();
+        List<ChatroomModel> chatroomsModels = 
+            chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)).ToList();
+
+        await _hub.Clients.Groups("group1").SendAsync("ReceiveChatrooms", chatroomsModels);
 
         return Ok();
     }

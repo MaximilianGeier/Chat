@@ -36,7 +36,7 @@ namespace BlazorApp1.Areas.Identity.Pages.Account.Manage
         {
             [Required]
             [Display(Name = "Новое имя")]
-            [StringLength(30, ErrorMessage = "Имя не может быть от {2} до {1} символов", MinimumLength = 4)]
+            [StringLength(30, ErrorMessage = "Имя не может быть длиней чем 30 символов.")]
             public string NewUserName { get; set; }
         }
         

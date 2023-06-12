@@ -26,45 +26,66 @@
         @foreach (var item in allMessages)
         {
             <p class="msg send">
-                <span class="font-weight-bold">@item.UserName:</span> @item.Text
+                <span class="msg__username">@item.UserName:</span> @item.Text
             </p>
         }
     }
 </div>
-    <EditForm class="form__send-msg" Model="message" OnSubmit="@createMessage">
-        <input class="form-control" @bind-value="@message.Text"/>
-        <button class="btn-secondary" type="submit">Послать это</button>
-    </EditForm>
+<EditForm class="form__send-msg" Model="message" OnSubmit="@createMessage">
+    <input class="form-control" placeholder="Новое сообщение" @bind-value="@message.Text"/>
+    <button class="send-msg__btn btn__standart" type="submit">Послать это</button>
+</EditForm>
 
-<div class="forms">
-    <EditForm class="form__container" Model="@newUser" OnSubmit="@AddSubmit">
-        <h2>Добавление пользователя</h2>
-        <label for="name">Имя</label>
-        <input class="form-control" @bind-value="@newUser.UserName" id="name" type="text" placeholder="Имя" name="Name">
-        <button class="btn-secondary">Добавить</button>
-        <p>@newMessage</p>
-    </EditForm>
-    
-    <EditForm class="form__container" Model="@renamedChatroom" OnSubmit="@RenameChat">
-        <h2>Переименовать чат🍕</h2>
-        <label for="name">Новое название</label>
-        <input class="form-control" @bind-value="@renamedChatroom.Title" id="name" type="text" placeholder="Новое название" name="Name">
-        <button type="submit" class="btn-secondary">Изменить</button>
-    </EditForm>
+<div class="@SettingsCssClass settings">
+    <div class="forms">
+        <div class="form__container">
+            <EditForm Model="@newUser" OnSubmit="@AddSubmit">
+                <h2>Добавление пользователя➕</h2>
+                <label for="name">Имя</label>
+                <input class="form-control" @bind-value="@newUser.UserName" id="name" type="text" placeholder="Имя" name="Name">
+                <button class="btn-secondary">Добавить</button>
+                <p>@newMessage</p>
+            </EditForm>
+        </div>
+        <div class="form__container">
+            <EditForm class="form__container" Model="@renamedChatroom" OnSubmit="@RenameChat">
+                <h2>Переименовать чат✒</h2>
+                <label for="name">Новое название</label>
+                <input class="form-control" @bind-value="@renamedChatroom.Title" id="name" type="text" placeholder="Новое название" name="Name">
+                <button type="submit" class="btn-secondary">Изменить</button>
+            </EditForm>
+        </div>
+    </div>
+    <div>
+        <h2>Все участники чата:</h2>
+        <ul>
+            @foreach (var user in chatUsers)
+            {
+                <li>
+                    @user.UserName
+                    <button class="btn__standart" @onclick="() => DeleteUserFromChat(user.UserName)">x</button>
+                </li>
+            }
+        </ul>
+        <p>@delUserMessage</p>
+    </div>
+    <button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
 </div>
-<div>
-    <ul>
-        @foreach (var user in chatUsers)
-        {
-            <li>
-                @user.UserName
-                <button @onclick="() => DeleteUserFromChat(user.UserName)"> x</button>
-            </li>
-        }
-    </ul>
-    <p>@delUserMessage</p>
-</div>
-<button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
+
+
+<button onclick="@ChangeSettingsVisability" class="btn__standart btn__settings">Настроить тут все</button>
+
+@code {
+    private bool settingsVisible = false;
+
+    private string? SettingsCssClass => settingsVisible ? null : "hidden";
+
+    private void ChangeSettingsVisability()
+    {
+        settingsVisible = !settingsVisible;
+    }
+
+}
 
 @* добавление пользоватя *@
 @code {
@@ -114,7 +135,6 @@
 
         hubConnection.On<ChatMessageModel>("ReceiveNewMessage", (data) =>
         {
-            Console.WriteLine("<><><><><><><><><><><><><><><><><><><><><>", data);
             if (data != null) allMessages?.Add(data);
             InvokeAsync(StateHasChanged);
 
@@ -142,20 +162,15 @@
     }
 }
 
-@*Отправка сообщения*@
-@code
-{
+@code {
+        @*Отправка сообщения*@
     CreateMessage message = new();
     async Task createMessage()
     {
         message.ChatId = chatId;
         Data = await (await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/message", message)).Content.ReadAsStringAsync();
     }
-}
-
-@*Отправка сообщения*@
-@code
-{
+    
     List<UserModel> chatUsers = new();
     async Task getChatUsers(int id)
     {
@@ -163,26 +178,6 @@
         if (response.IsSuccessStatusCode)
             chatUsers = await response.Content.ReadFromJsonAsync<List<UserModel>?>();
     }
-}
-
-
-@code
-{
-    public int chatId;
-    [Parameter]
-    public string PageId{ get; set; }
-
-    async protected override Task OnParametersSetAsync()
-    {
-        chatId = Int32.Parse(PageId);
-        await FetchMessages();
-        await base.OnParametersSetAsync();
-        await getChatUsers(chatId);
-    }
-}
-
-
-@code {
 
     DeleteUserFromChat deleteUserFromChat = new();
     
@@ -202,5 +197,17 @@
     {
         renamedChatroom.UserNames = chatUsers.Select(user => user.UserName);
         var request = await AuthRequestService.MakeAuthorizedPatch($"http://localhost:1977/chat/{chatId}", renamedChatroom);
+    }
+    
+    public int chatId;
+    [Parameter]
+    public string PageId{ get; set; }
+
+    async protected override Task OnParametersSetAsync()
+    {
+        chatId = Int32.Parse(PageId);
+        await FetchMessages();
+        await base.OnParametersSetAsync();
+        await getChatUsers(chatId);
     }
 }
