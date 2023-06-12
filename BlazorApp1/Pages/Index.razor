@@ -20,6 +20,7 @@
 @inject AuthRequestService AuthRequestService
 @inject NavigationManager NavigationManager
 
+
 <div class="chat-container">
     @if (allMessages is not null)
     {
@@ -72,8 +73,10 @@
     <button class="btn btn-danger" @onclick="DeleteChat">Удаление чата</button>
 </div>
 
-
-<button onclick="@ChangeSettingsVisability" class="btn__standart btn__settings">Настроить тут все</button>
+@if (currentChatroom?.Admins.Any(a => a.UserName == authUser.UserName) ?? false)
+{
+    <button onclick="@ChangeSettingsVisability" class="btn__standart btn__settings">Настроить тут все</button>
+}
 
 @code {
     private bool settingsVisible = false;
@@ -107,6 +110,10 @@
         var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/" + chatId);
         if (response.IsSuccessStatusCode)
             NavigationManager.NavigateTo("/");
+        else
+        {
+            newMessage = response.StatusCode.ToString();
+        }
     }
     
     async Task DeleteUser()
@@ -169,6 +176,7 @@
     {
         message.ChatId = chatId;
         Data = await (await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/message", message)).Content.ReadAsStringAsync();
+        message.Text = "";
     }
     
     List<UserModel> chatUsers = new();
@@ -178,6 +186,28 @@
         if (response.IsSuccessStatusCode)
             chatUsers = await response.Content.ReadFromJsonAsync<List<UserModel>?>();
     }
+    
+    
+    UserModel authUser = null;
+    async Task getAuthUser()
+    {
+        var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/user/authorized");
+        if (response.IsSuccessStatusCode)
+            authUser = await response.Content.ReadFromJsonAsync<UserModel?>();
+        else 
+            authUser = null;
+    }
+    
+    ChatroomModel currentChatroom = null;
+    async Task getCurrentChatroom()
+    {
+        var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/chat/{chatId}");
+        if (response.IsSuccessStatusCode)
+            currentChatroom = await response.Content.ReadFromJsonAsync<ChatroomModel?>();
+        else
+            currentChatroom = null;
+    }
+    
 
     DeleteUserFromChat deleteUserFromChat = new();
     
@@ -188,6 +218,8 @@
         deleteUserFromChat.ChatId = chatId;
         var request = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user", deleteUserFromChat);
         delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + deleteUserFromChat.UserName + (await request.Content.ReadAsStringAsync());
+        if(userName == authUser.UserName)
+            NavigationManager.NavigateTo("/");
     }
 
     
@@ -209,5 +241,8 @@
         await FetchMessages();
         await base.OnParametersSetAsync();
         await getChatUsers(chatId);
+        await getCurrentChatroom();
+        await getAuthUser();
+        settingsVisible = false;
     }
 }

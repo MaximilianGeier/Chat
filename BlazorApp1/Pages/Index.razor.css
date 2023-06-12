@@ -101,7 +101,8 @@
 
 .form__send-msg input{
     display: inline-block;
-    width: calc(100% - 120px);
+    width: calc(100% - 150px);
+    margin: 10px;
 }
 
 .hidden{
