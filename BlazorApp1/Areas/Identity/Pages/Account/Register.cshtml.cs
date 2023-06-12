@@ -40,31 +40,30 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
         {
             _userManager = userManager;
             _userStore = userStore;
-            _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _emailStore = GetEmailStore();
         }
         
         [BindProperty]
         public InputModel Input { get; set; }
         
         public string ReturnUrl { get; set; }
-        
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
-        
+
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
+            [StringLength(30, ErrorMessage = "Имя должно быть длиной от {2} до {1} символов", MinimumLength = 4)]
             [Display(Name = "Имя")]
             public string UserName { get; set; }
             
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [EmailAddress]
             [Display(Name = "Почта")]
             public string Email { get; set; }
             
-            [Required]
+            [Required(ErrorMessage = "Поле обязательно к заполнению!")]
             [StringLength(100, ErrorMessage = "Пароль должен быть длиной от {2} до {1} символов", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Пароль")]
@@ -79,7 +78,6 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -119,7 +117,7 @@ namespace BlazorApp1.Areas.Identity.Pages.Account
                 }
             }
 
-            return Page(); // If we got this far, something failed, redisplay form
+            return Page();
         }
 
         private ApplicationUser CreateUser()

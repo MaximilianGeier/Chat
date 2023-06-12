@@ -1,6 +1,6 @@
 ﻿<AuthorizeView>
     <Authorized>
-        <a href="Identity/Account/Manage">Ты случаем не тот самый @context.User.Identity?.Name?</a>
+        <a href="Identity/Account/Manage">Личный кабинет @context.User.Identity?.Name</a>
         <form method="post" action="Identity/Account/Logout">
             <button type="submit" class="nav-link btn btn-link">Выйти и зайти нормально</button>
         </form>
