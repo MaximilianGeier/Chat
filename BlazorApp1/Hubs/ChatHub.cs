@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Runtime.InteropServices.ComTypes;
+using Microsoft.AspNetCore.SignalR;
 
 namespace BlazorApp1.Hubs;
 
@@ -14,7 +15,7 @@ public class ChatHub : Hub
         await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId} вошел в чат");
         await base.OnConnectedAsync();
         Groups.AddToGroupAsync(Context.ConnectionId, "group1");
-        
+
         Thread.Sleep(2000);
         await Clients.All.SendAsync("ReceiveMessage", "Recived date");
     }

@@ -19,6 +19,7 @@
 @inject IHttpContextAccessor httpContextAccessor
 @inject AuthRequestService AuthRequestService
 @inject NavigationManager NavigationManager
+@inject NavigationManager Navigator
 
 <div style="position: relative">
     <div class="chat-container">
@@ -103,14 +104,14 @@
     {
         newMessage = "Отправка данных";
         newUser.ChatroomId = chatId;
-        var response = await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/user", newUser);
+        var response = await AuthRequestService.MakeAuthorizedPost($"{Navigator.BaseUri}chat/user", newUser);
         newMessage = response.IsSuccessStatusCode ? "Пользователь добавлен" : "Пользователя не существует";
         await getChatUsers(chatId);
     }
 
     async Task DeleteChat()
     {
-        var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/" + chatId);
+        var response = await AuthRequestService.MakeAuthorizedDelete($"{Navigator.BaseUri}chat/" + chatId);
         if (response.IsSuccessStatusCode)
             NavigationManager.NavigateTo("/");
         else
@@ -122,7 +123,7 @@
     async Task DeleteUser()
     {
         delUserMessage = "Отправка данных";
-        var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user/" + delUser);
+        var response = await AuthRequestService.MakeAuthorizedDelete($"{Navigator.BaseUri}chat/user/" + delUser);
         delUserMessage = response.IsSuccessStatusCode ? "Пользователь удален" : "Пользователя не существует";
     }
 
@@ -134,7 +135,7 @@
     protected override async Task OnInitializedAsync()
     {
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:1977/chathub")
+            .WithUrl($"{Navigator.BaseUri}chathub")
             .Build();
 
         hubConnection.On<string>("ReceiveMessage", (data) =>
@@ -162,7 +163,7 @@
 
     async Task FetchMessages()
     {
-        var response = await AuthRequestService.MakeAuthorizedGet("http://localhost:1977/chat/messages/" + chatId);
+        var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/messages/" + chatId);
         if (response.IsSuccessStatusCode)
             allMessages = await response.Content.ReadFromJsonAsync<List<ChatMessageModel>?>();
     }
@@ -173,7 +174,7 @@
     async Task createMessage()
     {
         message.ChatId = chatId;
-        Data = await (await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/message", message)).Content.ReadAsStringAsync();
+        Data = await (await AuthRequestService.MakeAuthorizedPost($"{Navigator.BaseUri}chat/message", message)).Content.ReadAsStringAsync();
         message.Text = "";
     }
 
@@ -181,7 +182,7 @@
 
     async Task getChatUsers(int id)
     {
-        var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/chat/{id}/users");
+        var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/{id}/users");
         if (response.IsSuccessStatusCode)
             chatUsers = await response.Content.ReadFromJsonAsync<List<UserModel>?>();
     }
@@ -191,7 +192,7 @@
 
     async Task getAuthUser()
     {
-        var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/user/authorized");
+        var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}user/authorized");
         if (response.IsSuccessStatusCode)
             authUser = await response.Content.ReadFromJsonAsync<UserModel?>();
         else
@@ -202,7 +203,7 @@
 
     async Task getCurrentChatroom()
     {
-        var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/chat/{chatId}");
+        var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/{chatId}");
         if (response.IsSuccessStatusCode)
             currentChatroom = await response.Content.ReadFromJsonAsync<ChatroomModel?>();
         else
@@ -217,7 +218,7 @@
         deleteUserFromChat.UserName = userName;
         delUserMessage = "Удаляю";
         deleteUserFromChat.ChatId = chatId;
-        var request = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user", deleteUserFromChat);
+        var request = await AuthRequestService.MakeAuthorizedDelete($"{Navigator.BaseUri}chat/user", deleteUserFromChat);
         delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + deleteUserFromChat.UserName + (await request.Content.ReadAsStringAsync());
         if (userName == authUser.UserName)
             NavigationManager.NavigateTo("/");
@@ -230,7 +231,7 @@
     async Task RenameChat()
     {
         renamedChatroom.UserNames = chatUsers.Select(user => user.UserName);
-        var request = await AuthRequestService.MakeAuthorizedPatch($"http://localhost:1977/chat/{chatId}", renamedChatroom);
+        var request = await AuthRequestService.MakeAuthorizedPatch($"{Navigator.BaseUri}chat/{chatId}", renamedChatroom);
     }
 
     public int chatId;
