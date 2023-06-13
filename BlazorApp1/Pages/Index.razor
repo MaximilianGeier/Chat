@@ -20,22 +20,24 @@
 @inject AuthRequestService AuthRequestService
 @inject NavigationManager NavigationManager
 
-
-<div class="chat-container">
-    <div class="chat-container-paddings">
-        @if (allMessages is not null)
-        {
-            @foreach (var item in allMessages)
+<div style="position: relative">
+    <div class="chat-container">
+        <div class="chat-container-paddings">
+            @if (allMessages is not null && authUser is not null)
             {
-                <p class="msg @(authUser.UserName == item.UserName ? "send" : "receive")">
-                    <span class="msg__username">@item.UserName:</span> @item.Text
-                </p>
+                @foreach (var item in allMessages)
+                {
+                    <p class="msg @(authUser.UserName == item.UserName ? "send" : "receive")">
+                        <span class="msg__username">@item.UserName:</span> @item.Text
+                    </p>
+                }
             }
-        }
+        </div>
     </div>
+    <div class="chat-container-border"></div>
 </div>
 <EditForm class="form__send-msg" Model="message" OnSubmit="@createMessage">
-    <input class="form-control" placeholder="Новое сообщение" @bind-value="@message.Text"/>
+    <input required class="form-control" placeholder="Новое сообщение" @bind-value="@message.Text"/>
     <button class="send-msg__btn btn__standart" type="submit">Послать это</button>
 </EditForm>
 
