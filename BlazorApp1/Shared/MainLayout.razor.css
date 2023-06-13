@@ -68,3 +68,10 @@ main {
         padding-right: 1.5rem !important;
     }
 }
+
+@media (max-width: 550px) {
+    .sidebar{
+        background: #1a1a1a url("bg.jpg") repeat left top;
+        background-size: 5em 5em;
+    }
+}

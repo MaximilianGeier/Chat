@@ -9,6 +9,7 @@
 @using Chat.Services
 @using Microsoft.AspNetCore.SignalR.Client
 @inject AuthRequestService AuthRequestService
+@inject NavigationManager Navigator
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -69,17 +70,15 @@
     {
         List<string> addedUsers = new List<string> { };
         chatroom.UserNames = addedUsers;
-        
-        string url = "http://localhost:1977/chat";
 
-        var response = await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat", chatroom);
+        var response = await AuthRequestService.MakeAuthorizedPost($"{Navigator.BaseUri}chat", chatroom);
         if (response.IsSuccessStatusCode)
             await FetchAllChats();
     }
     
     async Task FetchAllChats()
     {
-        var response = await AuthRequestService.MakeAuthorizedGet("http://localhost:1977/chat/all");
+        var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/all");
         if (response.IsSuccessStatusCode)
             allChats = await response.Content.ReadFromJsonAsync<List<ChatroomModel>>();
     }
@@ -89,7 +88,7 @@
         await FetchAllChats();
         
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:1977/chathub")
+            .WithUrl($"{Navigator.BaseUri}chathub")
             .Build();
 
         hubConnection.On<List<ChatroomModel>>("ReceiveChatrooms", (data) =>

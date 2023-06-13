@@ -152,6 +152,12 @@
     }
 }
 
+@media (max-width: 850px) {
+    .chat-container-border{
+        display: none;
+    }
+}
+
 @media (max-width: 550px) {
     .chat-container-paddings{
         width: 100%;
