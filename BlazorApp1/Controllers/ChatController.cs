@@ -109,7 +109,7 @@ public class ChatController : Controller
         List<ChatroomModel> chatroomsModels = 
             chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)).ToList();
 
-        await _hub.Clients.Groups("group1").SendAsync("ReceiveChatrooms", chatroomsModels);
+        await _hub.Clients.Groups("group_" + chatroom.Id).SendAsync("ReceiveChatrooms", chatroomsModels);
         
         return Ok();
     }
@@ -140,7 +140,7 @@ public class ChatController : Controller
         List<ChatroomModel> chatroomsModels = 
             chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)).ToList();
 
-        await _hub.Clients.Groups("group1").SendAsync("ReceiveChatrooms", chatroomsModels);
+        await _hub.Clients.Groups("group_" + id).SendAsync("ReceiveChatrooms", chatroomsModels);
 
         return Ok();
     }
@@ -259,7 +259,7 @@ public class ChatController : Controller
         List<ChatroomModel> chatroomsModels = 
             chatrooms.Select(chatroom => _mapper.Map<ChatroomModel>(chatroom)).ToList();
 
-        await _hub.Clients.Groups("group1").SendAsync("ReceiveChatrooms", chatroomsModels);
+        await _hub.Clients.Groups("group_" + chatroom.Id).SendAsync("ReceiveChatrooms", chatroomsModels);
 
         return Ok();
     }

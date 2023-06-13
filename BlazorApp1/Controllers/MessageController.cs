@@ -76,7 +76,7 @@ public class MessageController : Controller
         var c = await _context.SaveChangesAsync();
         ChatMessageModel chatMessageModel = _mapper.Map<ChatMessageModel>(message);
         
-        await _hub.Clients.Groups("group1").SendAsync("ReceiveNewMessage", chatMessageModel);
+        await _hub.Clients.Groups("group_" + chat.Id).SendAsync("ReceiveNewMessage", chatMessageModel);
 
         return Ok();
     }

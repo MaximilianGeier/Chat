@@ -126,7 +126,11 @@
         var response = await AuthRequestService.MakeAuthorizedDelete($"{Navigator.BaseUri}chat/user/" + delUser);
         delUserMessage = response.IsSuccessStatusCode ? "Пользователь удален" : "Пользователя не существует";
     }
-
+    
+    async Task SetHubGroup()
+    {
+        await hubConnection?.InvokeAsync("UpdateGroup",  chatId);
+    }
 
     //Подключение хабов
     public HubConnection? hubConnection;
@@ -137,7 +141,7 @@
         hubConnection = new HubConnectionBuilder()
             .WithUrl($"{Navigator.BaseUri}chathub")
             .Build();
-
+        
         hubConnection.On<string>("ReceiveMessage", (data) =>
         {
             Data = data;
@@ -248,6 +252,9 @@
         await getCurrentChatroom();
         await getAuthUser();
         settingsVisible = false;
+        await SetHubGroup();
     }
+    
+    On
 
 }
