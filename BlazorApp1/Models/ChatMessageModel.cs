@@ -7,4 +7,5 @@ public class ChatMessageModel
     public string UserName { get; set; }
     public DateTime Date { get; set; }
     public bool IsUpdated { get; set; }
+    public long ChatroomId { get; set; }
 }

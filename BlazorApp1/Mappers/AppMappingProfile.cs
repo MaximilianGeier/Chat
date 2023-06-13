@@ -11,6 +11,7 @@ public class AppMappingProfile : Profile
         CreateMap<ApplicationUser, UserModel>();
         CreateMap<Chatroom, ChatroomModel>();
         CreateMap<ChatMessage, ChatMessageModel>()
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName));
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
+            .ForMember(dest => dest.ChatroomId, opt => opt.MapFrom(src => src.Chatroom.Id));
     }
 }

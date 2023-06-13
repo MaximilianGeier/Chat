@@ -26,10 +26,10 @@
         <div class="chat-container-paddings">
             @if (allMessages is not null && authUser is not null)
             {
-                @foreach (var item in allMessages)
+                @for (int i = 0; i < allMessages.Count; i++)
                 {
-                    <p class="msg @(authUser.UserName == item.UserName ? "send" : "receive")">
-                        <span class="msg__username">@item.UserName:</span> @item.Text
+                    <p class="msg @(authUser.UserName == allMessages[i].UserName ? "send" : "receive")">
+                        <span class="msg__username">@allMessages[i].UserName:</span> @allMessages[i].Text
                     </p>
                 }
             }
@@ -106,7 +106,7 @@
         newUser.ChatroomId = chatId;
         var response = await AuthRequestService.MakeAuthorizedPost($"{Navigator.BaseUri}chat/user", newUser);
         newMessage = response.IsSuccessStatusCode ? "Пользователь добавлен" : "Пользователя не существует";
-        await getChatUsers(chatId);
+        await GetChatUsers(chatId);
     }
 
     async Task DeleteChat()
@@ -150,7 +150,8 @@
 
         hubConnection.On<ChatMessageModel>("ReceiveNewMessage", (data) =>
         {
-            if (data != null) allMessages?.Add(data);
+            if (data != null && data.ChatroomId == chatId) 
+                allMessages?.Add(data);
             InvokeAsync(StateHasChanged);
         });
 
@@ -184,7 +185,7 @@
 
     List<UserModel> chatUsers = new();
 
-    async Task getChatUsers(int id)
+    async Task GetChatUsers(int id)
     {
         var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/{id}/users");
         if (response.IsSuccessStatusCode)
@@ -194,7 +195,7 @@
 
     UserModel authUser = null;
 
-    async Task getAuthUser()
+    async Task GetAuthUser()
     {
         var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}user/authorized");
         if (response.IsSuccessStatusCode)
@@ -205,7 +206,7 @@
 
     ChatroomModel currentChatroom = null;
 
-    async Task getCurrentChatroom()
+    async Task GetCurrentChatroom()
     {
         var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/{chatId}");
         if (response.IsSuccessStatusCode)
@@ -214,6 +215,12 @@
             currentChatroom = null;
     }
 
+    async Task CheckChatroom()
+    {
+        var response = await AuthRequestService.MakeAuthorizedGet($"{Navigator.BaseUri}chat/" + chatId);
+        if (!response.IsSuccessStatusCode)
+            NavigationManager.NavigateTo("/");
+    }
 
     DeleteUserFromChat deleteUserFromChat = new();
 
@@ -226,7 +233,7 @@
         delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + deleteUserFromChat.UserName + (await request.Content.ReadAsStringAsync());
         if (userName == authUser.UserName)
             NavigationManager.NavigateTo("/");
-        await getChatUsers(chatId);
+        await GetChatUsers(chatId);
     }
 
 
@@ -246,15 +253,13 @@
     async protected override Task OnParametersSetAsync()
     {
         chatId = Int32.Parse(PageId);
+        await CheckChatroom();
         await FetchMessages();
         await base.OnParametersSetAsync();
-        await getChatUsers(chatId);
-        await getCurrentChatroom();
-        await getAuthUser();
+        await GetChatUsers(chatId);
+        await GetCurrentChatroom();
+        await GetAuthUser();
         settingsVisible = false;
         await SetHubGroup();
     }
-    
-    On
-
 }

@@ -44,7 +44,7 @@ public class ChatController : Controller
         if (chatroom is null || chatroom.IsDeleted)
             return NotFound();
 
-        if (!chatroom.Admins.Any(u => User.Identity.Name == u.UserName))
+        if (!chatroom.Users.Any(u => User.Identity.Name == u.UserName))
             return BadRequest();
 
         return Ok(_mapper.Map<ChatroomModel>(chatroom));

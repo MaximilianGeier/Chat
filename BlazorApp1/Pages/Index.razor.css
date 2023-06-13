@@ -1,7 +1,7 @@
 ﻿.form__container{
+    width: 400px;
     display: flex;
     flex-direction: column;
-    width: 50%;
     min-width: 400px;
     border: 1px dashed #468ACE;
     padding: 10px;
@@ -93,6 +93,7 @@
 .forms{
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 20px;
     justify-content: space-around;
     margin-left: 10px;
