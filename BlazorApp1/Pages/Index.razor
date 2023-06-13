@@ -22,15 +22,17 @@
 
 
 <div class="chat-container">
-    @if (allMessages is not null)
-    {
-        @foreach (var item in allMessages)
+    <div class="chat-container-paddings">
+        @if (allMessages is not null)
         {
-            <p class="msg @(authUser.UserName == item.UserName ? "send" : "receive")">
-                <span class="msg__username">@item.UserName:</span> @item.Text
-            </p>
+            @foreach (var item in allMessages)
+            {
+                <p class="msg @(authUser.UserName == item.UserName ? "send" : "receive")">
+                    <span class="msg__username">@item.UserName:</span> @item.Text
+                </p>
+            }
         }
-    }
+    </div>
 </div>
 <EditForm class="form__send-msg" Model="message" OnSubmit="@createMessage">
     <input class="form-control" placeholder="Новое сообщение" @bind-value="@message.Text"/>
@@ -78,6 +80,7 @@
     <button onclick="@ChangeSettingsVisability" class="btn__standart btn__settings">Настроить тут все</button>
 }
 
+
 @code {
     private bool settingsVisible = false;
 
@@ -88,10 +91,7 @@
         settingsVisible = !settingsVisible;
     }
 
-}
-
-@* добавление пользоватя *@
-@code {
+    // добавление пользоватя
     AddUser newUser = new();
     string? newMessage;
     string? delUserMessage;
@@ -105,7 +105,7 @@
         newMessage = response.IsSuccessStatusCode ? "Пользователь добавлен" : "Пользователя не существует";
         await getChatUsers(chatId);
     }
-    
+
     async Task DeleteChat()
     {
         var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/" + chatId);
@@ -116,16 +116,16 @@
             newMessage = response.StatusCode.ToString();
         }
     }
-    
+
     async Task DeleteUser()
     {
         delUserMessage = "Отправка данных";
         var response = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user/" + delUser);
         delUserMessage = response.IsSuccessStatusCode ? "Пользователь удален" : "Пользователя не существует";
     }
-}
 
-@code {
+
+    //Подключение хабов
     public HubConnection? hubConnection;
     public string Data;
 
@@ -145,61 +145,59 @@
         {
             if (data != null) allMessages?.Add(data);
             InvokeAsync(StateHasChanged);
-
         });
 
         await hubConnection.StartAsync();
     }
-}
 
-@*получение сообщений*@
-@code
-{
+    // получение сообщений
     List<ChatMessageModel>? allMessages;
 
     async Task OnChatClick(int id)
     {
         NavigationManager.NavigateTo(id.ToString());
     }
-    
+
     async Task FetchMessages()
     {
         var response = await AuthRequestService.MakeAuthorizedGet("http://localhost:1977/chat/messages/" + chatId);
         if (response.IsSuccessStatusCode)
             allMessages = await response.Content.ReadFromJsonAsync<List<ChatMessageModel>?>();
     }
-}
 
-@code {
-        @*Отправка сообщения*@
+    //Отправка сообщения
     CreateMessage message = new();
+
     async Task createMessage()
     {
         message.ChatId = chatId;
         Data = await (await AuthRequestService.MakeAuthorizedPost("http://localhost:1977/chat/message", message)).Content.ReadAsStringAsync();
         message.Text = "";
     }
-    
+
     List<UserModel> chatUsers = new();
+
     async Task getChatUsers(int id)
     {
         var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/chat/{id}/users");
         if (response.IsSuccessStatusCode)
             chatUsers = await response.Content.ReadFromJsonAsync<List<UserModel>?>();
     }
-    
-    
+
+
     UserModel authUser = null;
+
     async Task getAuthUser()
     {
         var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/user/authorized");
         if (response.IsSuccessStatusCode)
             authUser = await response.Content.ReadFromJsonAsync<UserModel?>();
-        else 
+        else
             authUser = null;
     }
-    
+
     ChatroomModel currentChatroom = null;
+
     async Task getCurrentChatroom()
     {
         var response = await AuthRequestService.MakeAuthorizedGet($"http://localhost:1977/chat/{chatId}");
@@ -208,10 +206,10 @@
         else
             currentChatroom = null;
     }
-    
+
 
     DeleteUserFromChat deleteUserFromChat = new();
-    
+
     async Task DeleteUserFromChat(string userName)
     {
         deleteUserFromChat.UserName = userName;
@@ -219,23 +217,24 @@
         deleteUserFromChat.ChatId = chatId;
         var request = await AuthRequestService.MakeAuthorizedDelete("http://localhost:1977/chat/user", deleteUserFromChat);
         delUserMessage = request.IsSuccessStatusCode ? "Пользователь удалён!" : "Не удалось удалить пользователя: " + deleteUserFromChat.UserName + (await request.Content.ReadAsStringAsync());
-        if(userName == authUser.UserName)
+        if (userName == authUser.UserName)
             NavigationManager.NavigateTo("/");
         await getChatUsers(chatId);
     }
 
-    
+
     CreateChatroom renamedChatroom = new();
-    
+
     async Task RenameChat()
     {
         renamedChatroom.UserNames = chatUsers.Select(user => user.UserName);
         var request = await AuthRequestService.MakeAuthorizedPatch($"http://localhost:1977/chat/{chatId}", renamedChatroom);
     }
-    
+
     public int chatId;
+
     [Parameter]
-    public string PageId{ get; set; }
+    public string PageId { get; set; }
 
     async protected override Task OnParametersSetAsync()
     {
@@ -247,4 +246,5 @@
         await getAuthUser();
         settingsVisible = false;
     }
+
 }

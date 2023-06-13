@@ -56,10 +56,12 @@
 }
 
 .receive{
+    border-radius: 0 6px 6px 6px;
     align-self: flex-start;
 }
 
 .send{
+    border-radius: 6px 0 6px 6px;
     align-self: flex-end;
 }
 
@@ -127,4 +129,29 @@
 .settings {
     margin-top: 25px;
     margin-left: 25px;
+}
+
+.chat-container-paddings{
+    min-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 1200px) {
+    .chat-container-paddings{
+        min-width: 450px;
+    }
+}
+
+@media (max-width: 550px) {
+    .chat-container-paddings{
+        min-width: 100%;
+    }
+    
+    .send{
+        align-self: flex-start;
+        border-radius: 0 6px 6px 6px;
+    }
 }
